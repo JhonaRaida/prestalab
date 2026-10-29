@@ -5,7 +5,7 @@ Para más detalle (sin Docker, pruebas, Postman) revisa el `README.md`.
 
 ## 1. Lo que necesitas
 
-- **Git** y una cuenta de **GitHub** con acceso al repositorio (pídele a Jhonatan que te agregue como colaborador).
+- **Git** (para descargar el repositorio). Para subir cambios necesitas cuenta de **GitHub** y que Jhonatan te agregue como colaborador.
 - **Docker**:
   - **Windows / Mac:** instala [Docker Desktop](https://www.docker.com/products/docker-desktop/) y ábrelo antes de empezar.
   - **Linux (Ubuntu / Pop!_OS):**
@@ -18,10 +18,7 @@ Para más detalle (sin Docker, pruebas, Postman) revisa el `README.md`.
 
 ## 2. Descargar el proyecto
 
-El repositorio es privado, así que primero inicia sesión en GitHub desde la terminal:
-
 ```bash
-gh auth login                        # si no tienes gh: sudo apt install -y gh  (Windows: winget install GitHub.cli)
 git clone https://github.com/JhonaRaida/prestalab.git
 cd prestalab
 ```

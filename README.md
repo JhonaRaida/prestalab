@@ -47,7 +47,7 @@ Necesitas **Docker Desktop** (o Docker Engine + Compose) y **Git**.
 
 1. Clona el repositorio y entra a la carpeta:
    ```bash
-   git clone <URL-DEL-REPOSITORIO> prestalab
+   git clone https://github.com/JhonaRaida/prestalab.git
    cd prestalab
    ```
 2. Crea tu archivo de configuración a partir del ejemplo:
