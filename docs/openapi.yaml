@@ -1,0 +1,2285 @@
+openapi: 3.0.3
+info:
+  title: PrestaLab API
+  version: 1.0.0-borrador
+  description: Borrador de la API de PrestaLab (Entrega 3). Todas las rutas pasan por el API Gateway. Las rutas
+    /internal/v1 son solo entre servicios y no se publican.
+servers:
+- url: http://localhost:8080/api/v1
+  description: Gateway local (Docker Compose)
+tags:
+- name: Usuarios
+  description: Usuarios y Autenticación
+- name: Inventario
+  description: Laboratorios, categorías y recursos
+- name: Reservas
+  description: Reservas y Préstamos
+- name: Notificaciones
+  description: Avisos a usuarios
+- name: Reportes
+  description: Reportes de solo lectura
+security:
+- bearerAuth: []
+paths:
+  /sesiones:
+    post:
+      tags:
+      - Usuarios
+      summary: Iniciar sesión y obtener token
+      operationId: E01post
+      description: 'Acceso: Público. Requisito: RF-01.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SesionCrear'
+            example:
+              correo: ana.lopez@ejemplo.edu.mx
+              contrasena: Contrasena#2026
+      responses:
+        '201':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sesion'
+              example:
+                tokenAcceso: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                tipo: Bearer
+                expiraEn: 3600
+                usuario:
+                  id: 12
+                  nombre: Ana López Ruiz
+                  rol: alumno
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '429':
+          $ref: '#/components/responses/E429'
+        '500':
+          $ref: '#/components/responses/E500'
+  /usuarios:
+    post:
+      tags:
+      - Usuarios
+      summary: Registrar un usuario
+      operationId: E02post
+      description: 'Acceso: Público. Requisito: RF-01.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCrear'
+            example:
+              nombre: Ana López Ruiz
+              correo: ana.lopez@ejemplo.edu.mx
+              matricula: '023000123'
+              contrasena: Contrasena#2026
+              rol: alumno
+      responses:
+        '201':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+              example:
+                id: 12
+                nombre: Ana López Ruiz
+                correo: ana.lopez@ejemplo.edu.mx
+                matricula: '023000123'
+                rol: alumno
+                estado: activo
+                creadoEn: '2026-11-02T18:30:00-06:00'
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/E400'
+        '409':
+          $ref: '#/components/responses/E409'
+        '429':
+          $ref: '#/components/responses/E429'
+        '500':
+          $ref: '#/components/responses/E500'
+    get:
+      tags:
+      - Usuarios
+      summary: Listar usuarios
+      operationId: E03get
+      description: 'Acceso: Administrador. Requisito: RF-02.'
+      x-roles: &id002
+      - administrador
+      parameters:
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      - $ref: '#/components/parameters/q_rol'
+      - $ref: '#/components/parameters/q_estadoUsuario'
+      - $ref: '#/components/parameters/q_q'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioLista'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '500':
+          $ref: '#/components/responses/E500'
+  /usuarios/{usuarioId}:
+    get:
+      tags:
+      - Usuarios
+      summary: Consultar un usuario
+      operationId: E04get
+      description: 'Acceso: Administrador; el propio usuario. Requisito: RF-02.'
+      x-roles: &id001
+      - alumno
+      - docente
+      - encargado
+      - administrador
+      parameters:
+      - $ref: '#/components/parameters/path_usuarioId'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+    patch:
+      tags:
+      - Usuarios
+      summary: Cambiar rol, estado o nombre
+      operationId: E05patch
+      description: 'Acceso: Administrador; el propio usuario (solo nombre). Requisito: RF-02.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/path_usuarioId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioActualizar'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+  /usuarios/{usuarioId}/sanciones:
+    get:
+      tags:
+      - Usuarios
+      summary: Consultar sanciones de un usuario
+      operationId: E06get
+      description: 'Acceso: Administrador; el propio usuario. Requisito: RF-07.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/path_usuarioId'
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SancionLista'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+  /laboratorios:
+    get:
+      tags:
+      - Inventario
+      summary: Listar laboratorios
+      operationId: E07get
+      description: 'Acceso: Autenticado. Requisito: RF-03.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LaboratorioLista'
+        '401':
+          $ref: '#/components/responses/E401'
+        '500':
+          $ref: '#/components/responses/E500'
+    post:
+      tags:
+      - Inventario
+      summary: Crear un laboratorio
+      operationId: E08post
+      description: 'Acceso: Administrador. Requisito: RF-03.'
+      x-roles: *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LaboratorioEntrada'
+      responses:
+        '201':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laboratorio'
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '409':
+          $ref: '#/components/responses/E409'
+        '500':
+          $ref: '#/components/responses/E500'
+  /laboratorios/{laboratorioId}:
+    get:
+      tags:
+      - Inventario
+      summary: Consultar un laboratorio
+      operationId: E09get
+      description: 'Acceso: Autenticado. Requisito: RF-03.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/path_laboratorioId'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laboratorio'
+        '401':
+          $ref: '#/components/responses/E401'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+    put:
+      tags:
+      - Inventario
+      summary: Reemplazar los datos de un laboratorio
+      operationId: E10put
+      description: 'Acceso: Administrador. Requisito: RF-03.'
+      x-roles: *id002
+      parameters:
+      - $ref: '#/components/parameters/path_laboratorioId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LaboratorioEntrada'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Laboratorio'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+  /categorias:
+    get:
+      tags:
+      - Inventario
+      summary: Listar categorías
+      operationId: E11get
+      description: 'Acceso: Autenticado. Requisito: RF-03.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      - $ref: '#/components/parameters/q_tipoRecurso'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriaLista'
+        '401':
+          $ref: '#/components/responses/E401'
+        '500':
+          $ref: '#/components/responses/E500'
+    post:
+      tags:
+      - Inventario
+      summary: Crear una categoría
+      operationId: E12post
+      description: 'Acceso: Administrador. Requisito: RF-03.'
+      x-roles: *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaEntrada'
+      responses:
+        '201':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categoria'
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '409':
+          $ref: '#/components/responses/E409'
+        '500':
+          $ref: '#/components/responses/E500'
+  /recursos:
+    get:
+      tags:
+      - Inventario
+      summary: Listar y filtrar recursos
+      operationId: E13get
+      description: 'Acceso: Autenticado. Requisito: RF-03.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      - $ref: '#/components/parameters/q_laboratorioId'
+      - $ref: '#/components/parameters/q_categoriaId'
+      - $ref: '#/components/parameters/q_tipoRecurso'
+      - $ref: '#/components/parameters/q_estadoRecurso'
+      - $ref: '#/components/parameters/q_q'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecursoLista'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '500':
+          $ref: '#/components/responses/E500'
+    post:
+      tags:
+      - Inventario
+      summary: Crear un recurso
+      operationId: E14post
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-03.'
+      x-roles: &id003
+      - encargado
+      - administrador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecursoEntrada'
+            example:
+              nombre: Osciloscopio digital de 4 canales
+              codigoInventario: LAB-ELEC-0015
+              categoriaId: 3
+              laboratorioId: 2
+              descripcion: 100 MHz
+      responses:
+        '201':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recurso'
+              example:
+                id: 15
+                nombre: Osciloscopio digital de 4 canales
+                codigoInventario: LAB-ELEC-0015
+                categoriaId: 3
+                laboratorioId: 2
+                descripcion: 100 MHz
+                estado: activo
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '409':
+          $ref: '#/components/responses/E409'
+        '422':
+          $ref: '#/components/responses/E422'
+        '500':
+          $ref: '#/components/responses/E500'
+  /recursos/{recursoId}:
+    get:
+      tags:
+      - Inventario
+      summary: Consultar un recurso
+      operationId: E15get
+      description: 'Acceso: Autenticado. Requisito: RF-03.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/path_recursoId'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recurso'
+        '401':
+          $ref: '#/components/responses/E401'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+    put:
+      tags:
+      - Inventario
+      summary: Reemplazar los datos de un recurso
+      operationId: E16put
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-03.'
+      x-roles: *id003
+      parameters:
+      - $ref: '#/components/parameters/path_recursoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecursoEntrada'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recurso'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '409':
+          $ref: '#/components/responses/E409'
+        '422':
+          $ref: '#/components/responses/E422'
+        '500':
+          $ref: '#/components/responses/E500'
+    patch:
+      tags:
+      - Inventario
+      summary: Cambiar el estado (activo, mantenimiento, baja)
+      operationId: E17patch
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-03.'
+      x-roles: *id003
+      parameters:
+      - $ref: '#/components/parameters/path_recursoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecursoEstado'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recurso'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+    delete:
+      tags:
+      - Inventario
+      summary: Dar de baja un recurso (baja lógica)
+      operationId: E18delete
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-03.'
+      x-roles: *id003
+      parameters:
+      - $ref: '#/components/parameters/path_recursoId'
+      responses:
+        '204':
+          description: Operación exitosa
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '409':
+          $ref: '#/components/responses/E409'
+        '500':
+          $ref: '#/components/responses/E500'
+  /disponibilidad:
+    get:
+      tags:
+      - Reservas
+      summary: Consultar recursos disponibles en un horario
+      operationId: E19get
+      description: 'Acceso: Autenticado. Requisito: RF-04.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/q_inicio'
+      - $ref: '#/components/parameters/q_fin'
+      - $ref: '#/components/parameters/q_tipoRecurso'
+      - $ref: '#/components/parameters/q_laboratorioId'
+      - $ref: '#/components/parameters/q_categoriaId'
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecursoDisponibleLista'
+              example:
+                data:
+                - recursoId: 15
+                  nombre: Osciloscopio digital de 4 canales
+                  tipo: equipo
+                  laboratorioId: 2
+                  inicio: '2026-11-03T10:00:00-06:00'
+                  fin: '2026-11-03T12:00:00-06:00'
+                - recursoId: 18
+                  nombre: Multímetro de banco
+                  tipo: equipo
+                  laboratorioId: 2
+                  inicio: '2026-11-03T10:00:00-06:00'
+                  fin: '2026-11-03T12:00:00-06:00'
+                meta:
+                  page: 1
+                  limit: 20
+                  total: 2
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '503':
+          $ref: '#/components/responses/E503'
+        '500':
+          $ref: '#/components/responses/E500'
+  /reservas:
+    post:
+      tags:
+      - Reservas
+      summary: Crear una reserva
+      operationId: E20post
+      description: 'Acceso: Alumno, docente; encargado (mostrador). Requisito: RF-05.'
+      x-roles:
+      - alumno
+      - docente
+      - encargado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaCrear'
+            example:
+              recursoId: 15
+              inicio: '2026-11-03T10:00:00-06:00'
+              fin: '2026-11-03T12:00:00-06:00'
+      responses:
+        '201':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+              example:
+                id: 31
+                usuarioId: 12
+                recursoId: 15
+                inicio: '2026-11-03T10:00:00-06:00'
+                fin: '2026-11-03T12:00:00-06:00'
+                estado: confirmada
+                creadaEn: '2026-11-02T18:35:00-06:00'
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '409':
+          $ref: '#/components/responses/E409'
+        '422':
+          $ref: '#/components/responses/E422'
+        '503':
+          $ref: '#/components/responses/E503'
+        '500':
+          $ref: '#/components/responses/E500'
+    get:
+      tags:
+      - Reservas
+      summary: Consultar historial de reservas
+      operationId: E21get
+      description: 'Acceso: Alumno, docente (propias); encargado (su laboratorio); administrador. Requisito: RF-09.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      - $ref: '#/components/parameters/q_usuarioId'
+      - $ref: '#/components/parameters/q_recursoId'
+      - $ref: '#/components/parameters/q_estadoReserva'
+      - $ref: '#/components/parameters/q_desde'
+      - $ref: '#/components/parameters/q_hasta'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservaLista'
+              example:
+                data:
+                - id: 30
+                  usuarioId: 12
+                  recursoId: 18
+                  inicio: '2026-10-27T09:00:00-06:00'
+                  fin: '2026-10-27T11:00:00-06:00'
+                  estado: finalizada
+                  creadaEn: '2026-10-26T17:00:00-06:00'
+                - id: 22
+                  usuarioId: 12
+                  recursoId: 15
+                  inicio: '2026-10-20T10:00:00-06:00'
+                  fin: '2026-10-20T12:00:00-06:00'
+                  estado: finalizada
+                  creadaEn: '2026-10-19T16:20:00-06:00'
+                meta:
+                  page: 1
+                  limit: 2
+                  total: 5
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '500':
+          $ref: '#/components/responses/E500'
+  /reservas/{reservaId}:
+    get:
+      tags:
+      - Reservas
+      summary: Consultar una reserva
+      operationId: E22get
+      description: 'Acceso: Dueño de la reserva; encargado; administrador. Requisito: RF-09.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/path_reservaId'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+    patch:
+      tags:
+      - Reservas
+      summary: Modificar el horario o cancelar la reserva
+      operationId: E23patch
+      description: 'Acceso: Dueño de la reserva; encargado; administrador. Requisito: RF-05.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/path_reservaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservaActualizar'
+            example:
+              estado: cancelada
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+              example:
+                id: 31
+                usuarioId: 12
+                recursoId: 15
+                inicio: '2026-11-03T10:00:00-06:00'
+                fin: '2026-11-03T12:00:00-06:00'
+                estado: cancelada
+                creadaEn: '2026-11-02T18:35:00-06:00'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '409':
+          $ref: '#/components/responses/E409'
+        '422':
+          $ref: '#/components/responses/E422'
+        '500':
+          $ref: '#/components/responses/E500'
+  /prestamos:
+    post:
+      tags:
+      - Reservas
+      summary: Registrar la entrega del recurso
+      operationId: E24post
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-06.'
+      x-roles: *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrestamoCrear'
+            example:
+              reservaId: 31
+              observaciones: Se entrega con puntas y cable de alimentación
+      responses:
+        '201':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prestamo'
+              example:
+                id: 8
+                reservaId: 31
+                entregadoPor: 3
+                fechaEntrega: '2026-11-03T10:02:00-06:00'
+                observaciones: Se entrega con puntas y cable de alimentación
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '409':
+          $ref: '#/components/responses/E409'
+        '422':
+          $ref: '#/components/responses/E422'
+        '500':
+          $ref: '#/components/responses/E500'
+  /prestamos/{prestamoId}:
+    get:
+      tags:
+      - Reservas
+      summary: Consultar un préstamo
+      operationId: E25get
+      description: 'Acceso: Encargado; administrador; dueño de la reserva. Requisito: RF-06.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/path_prestamoId'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prestamo'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+    patch:
+      tags:
+      - Reservas
+      summary: Registrar la devolución y su estado
+      operationId: E26patch
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-06.'
+      x-roles: *id003
+      parameters:
+      - $ref: '#/components/parameters/path_prestamoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrestamoDevolucion'
+            example:
+              estadoDevolucion: danado
+              observaciones: La pantalla presenta una raya
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prestamo'
+              example:
+                id: 8
+                reservaId: 31
+                entregadoPor: 3
+                fechaEntrega: '2026-11-03T10:02:00-06:00'
+                recibidoPor: 3
+                fechaDevolucion: '2026-11-03T12:40:00-06:00'
+                estadoDevolucion: danado
+                observaciones: La pantalla presenta una raya
+                efectos:
+                  retraso: true
+                  incidenciasCreadas:
+                  - 7
+                  - 8
+                  recursoEstado: mantenimiento
+                  sancionCreada: 2
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '409':
+          $ref: '#/components/responses/E409'
+        '503':
+          $ref: '#/components/responses/E503'
+        '500':
+          $ref: '#/components/responses/E500'
+  /incidencias:
+    post:
+      tags:
+      - Reservas
+      summary: Registrar una incidencia
+      operationId: E27post
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-07.'
+      x-roles: *id003
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidenciaCrear'
+      responses:
+        '201':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incidencia'
+          headers:
+            Location:
+              description: URL del recurso creado
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+    get:
+      tags:
+      - Reservas
+      summary: Listar incidencias
+      operationId: E28get
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-07.'
+      x-roles: *id003
+      parameters:
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      - $ref: '#/components/parameters/q_tipoIncidencia'
+      - $ref: '#/components/parameters/q_recursoId'
+      - $ref: '#/components/parameters/q_estadoIncidencia'
+      - $ref: '#/components/parameters/q_desde'
+      - $ref: '#/components/parameters/q_hasta'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidenciaLista'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '500':
+          $ref: '#/components/responses/E500'
+  /notificaciones:
+    get:
+      tags:
+      - Notificaciones
+      summary: Consultar las notificaciones propias
+      operationId: E29get
+      description: 'Acceso: Autenticado (solo las propias). Requisito: RF-08.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/q_page'
+      - $ref: '#/components/parameters/q_limit'
+      - $ref: '#/components/parameters/q_leida'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificacionLista'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '500':
+          $ref: '#/components/responses/E500'
+  /notificaciones/{notificacionId}:
+    patch:
+      tags:
+      - Notificaciones
+      summary: Marcar una notificación como leída
+      operationId: E30patch
+      description: 'Acceso: Dueño de la notificación. Requisito: RF-08.'
+      x-roles: *id001
+      parameters:
+      - $ref: '#/components/parameters/path_notificacionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificacionActualizar'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notificacion'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '404':
+          $ref: '#/components/responses/E404'
+        '500':
+          $ref: '#/components/responses/E500'
+  /reportes/uso:
+    get:
+      tags:
+      - Reportes
+      summary: Reporte de uso de recursos
+      operationId: E31get
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-10.'
+      x-roles: *id003
+      parameters:
+      - $ref: '#/components/parameters/q_desdeReq'
+      - $ref: '#/components/parameters/q_hastaReq'
+      - $ref: '#/components/parameters/q_laboratorioId'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReporteUso'
+              example:
+                desde: '2026-10-01T00:00:00-06:00'
+                hasta: '2026-10-31T23:59:59-06:00'
+                recursos:
+                - recursoId: 15
+                  nombre: Osciloscopio digital de 4 canales
+                  totalPrestamos: 9
+                  horasUso: 21.5
+                - recursoId: 18
+                  nombre: Multímetro de banco
+                  totalPrestamos: 6
+                  horasUso: 12.0
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '503':
+          $ref: '#/components/responses/E503'
+        '500':
+          $ref: '#/components/responses/E500'
+  /reportes/ocupacion:
+    get:
+      tags:
+      - Reportes
+      summary: Reporte de ocupación por laboratorio
+      operationId: E32get
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-10.'
+      x-roles: *id003
+      parameters:
+      - $ref: '#/components/parameters/q_desdeReq'
+      - $ref: '#/components/parameters/q_hastaReq'
+      - $ref: '#/components/parameters/q_laboratorioId'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReporteOcupacion'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '503':
+          $ref: '#/components/responses/E503'
+        '500':
+          $ref: '#/components/responses/E500'
+  /reportes/retrasos:
+    get:
+      tags:
+      - Reportes
+      summary: Reporte de retrasos e incidencias
+      operationId: E33get
+      description: 'Acceso: Encargado (su laboratorio); administrador. Requisito: RF-10.'
+      x-roles: *id003
+      parameters:
+      - $ref: '#/components/parameters/q_desdeReq'
+      - $ref: '#/components/parameters/q_hastaReq'
+      - $ref: '#/components/parameters/q_laboratorioId'
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReporteRetrasos'
+        '400':
+          $ref: '#/components/responses/E400'
+        '401':
+          $ref: '#/components/responses/E401'
+        '403':
+          $ref: '#/components/responses/E403'
+        '503':
+          $ref: '#/components/responses/E503'
+        '500':
+          $ref: '#/components/responses/E500'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    path_usuarioId:
+      name: usuarioId
+      in: path
+      required: true
+      description: Identificador del usuario
+      schema:
+        type: integer
+        minimum: 1
+    path_laboratorioId:
+      name: laboratorioId
+      in: path
+      required: true
+      description: Identificador del laboratorio
+      schema:
+        type: integer
+        minimum: 1
+    path_recursoId:
+      name: recursoId
+      in: path
+      required: true
+      description: Identificador del recurso
+      schema:
+        type: integer
+        minimum: 1
+    path_reservaId:
+      name: reservaId
+      in: path
+      required: true
+      description: Identificador de la reserva
+      schema:
+        type: integer
+        minimum: 1
+    path_prestamoId:
+      name: prestamoId
+      in: path
+      required: true
+      description: Identificador del préstamo
+      schema:
+        type: integer
+        minimum: 1
+    path_notificacionId:
+      name: notificacionId
+      in: path
+      required: true
+      description: Identificador de la notificación
+      schema:
+        type: integer
+        minimum: 1
+    q_page:
+      name: page
+      in: query
+      required: false
+      description: Número de página
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    q_limit:
+      name: limit
+      in: query
+      required: false
+      description: Elementos por página (máximo 100)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    q_rol:
+      name: rol
+      in: query
+      required: false
+      description: Filtrar por rol
+      schema:
+        type: string
+        enum: &id004
+        - alumno
+        - docente
+        - encargado
+        - administrador
+    q_estadoUsuario:
+      name: estado
+      in: query
+      required: false
+      description: Filtrar por estado de cuenta
+      schema:
+        type: string
+        enum:
+        - activo
+        - bloqueado
+    q_estadoRecurso:
+      name: estado
+      in: query
+      required: false
+      description: Filtrar por estado del recurso
+      schema:
+        type: string
+        enum:
+        - activo
+        - mantenimiento
+        - baja
+    q_estadoReserva:
+      name: estado
+      in: query
+      required: false
+      description: Filtrar por estado de la reserva
+      schema:
+        type: string
+        enum:
+        - confirmada
+        - cancelada
+        - en_curso
+        - finalizada
+    q_estadoIncidencia:
+      name: estado
+      in: query
+      required: false
+      description: Filtrar por estado de la incidencia
+      schema:
+        type: string
+        enum:
+        - abierta
+        - cerrada
+    q_q:
+      name: q
+      in: query
+      required: false
+      description: Texto a buscar en el nombre
+      schema:
+        type: string
+    q_laboratorioId:
+      name: laboratorioId
+      in: query
+      required: false
+      description: Filtrar por laboratorio
+      schema:
+        type: integer
+        minimum: 1
+    q_categoriaId:
+      name: categoriaId
+      in: query
+      required: false
+      description: Filtrar por categoría
+      schema:
+        type: integer
+        minimum: 1
+    q_tipoRecurso:
+      name: tipo
+      in: query
+      required: false
+      description: Tipo de recurso
+      schema:
+        type: string
+        enum:
+        - equipo
+        - espacio
+    q_tipoIncidencia:
+      name: tipo
+      in: query
+      required: false
+      description: Tipo de incidencia
+      schema:
+        type: string
+        enum:
+        - dano
+        - faltante
+        - retraso
+    q_usuarioId:
+      name: usuarioId
+      in: query
+      required: false
+      description: Filtrar por usuario
+      schema:
+        type: integer
+        minimum: 1
+    q_recursoId:
+      name: recursoId
+      in: query
+      required: false
+      description: Filtrar por recurso
+      schema:
+        type: integer
+        minimum: 1
+    q_inicio:
+      name: inicio
+      in: query
+      required: true
+      description: Inicio del horario consultado (ISO 8601)
+      schema:
+        type: string
+        format: date-time
+    q_fin:
+      name: fin
+      in: query
+      required: true
+      description: Fin del horario consultado (ISO 8601)
+      schema:
+        type: string
+        format: date-time
+    q_desde:
+      name: desde
+      in: query
+      required: false
+      description: Inicio del periodo (ISO 8601)
+      schema:
+        type: string
+        format: date-time
+    q_hasta:
+      name: hasta
+      in: query
+      required: false
+      description: Fin del periodo (ISO 8601)
+      schema:
+        type: string
+        format: date-time
+    q_desdeReq:
+      name: desde
+      in: query
+      required: true
+      description: Inicio del periodo (ISO 8601)
+      schema:
+        type: string
+        format: date-time
+    q_hastaReq:
+      name: hasta
+      in: query
+      required: true
+      description: Fin del periodo (ISO 8601)
+      schema:
+        type: string
+        format: date-time
+    q_leida:
+      name: leida
+      in: query
+      required: false
+      description: Filtrar por notificaciones leídas o no leídas
+      schema:
+        type: boolean
+  schemas:
+    Meta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+      required:
+      - page
+      - limit
+      - total
+      description: Datos de paginación
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            codigo:
+              type: string
+              description: Código de aplicación estable, en MAYÚSCULAS
+            mensaje:
+              type: string
+              description: Mensaje legible, sin información interna
+            detalles:
+              type: array
+              items:
+                type: object
+                properties:
+                  campo:
+                    type: string
+                  problema:
+                    type: string
+                required:
+                - problema
+            ruta:
+              type: string
+            fecha:
+              type: string
+              format: date-time
+            idPeticion:
+              type: string
+              description: Identificador de la petición, asignado por el Gateway
+          required:
+          - codigo
+          - mensaje
+          - ruta
+          - fecha
+          - idPeticion
+      required:
+      - error
+    SesionCrear:
+      type: object
+      properties:
+        correo:
+          type: string
+          format: email
+        contrasena:
+          type: string
+          format: password
+      required:
+      - correo
+      - contrasena
+    Sesion:
+      type: object
+      properties:
+        tokenAcceso:
+          type: string
+        tipo:
+          type: string
+          enum:
+          - Bearer
+        expiraEn:
+          type: integer
+          description: Segundos de vigencia
+        usuario:
+          type: object
+          properties:
+            id:
+              type: integer
+            nombre:
+              type: string
+            rol:
+              type: string
+              enum: *id004
+      required:
+      - tokenAcceso
+      - tipo
+      - expiraEn
+      - usuario
+    UsuarioCrear:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 3
+          maxLength: 120
+        correo:
+          type: string
+          format: email
+        matricula:
+          type: string
+          maxLength: 20
+        contrasena:
+          type: string
+          format: password
+          minLength: 8
+        rol:
+          type: string
+          enum:
+          - alumno
+          - docente
+          description: Si se omite se asigna alumno
+      required:
+      - nombre
+      - correo
+      - matricula
+      - contrasena
+    UsuarioActualizar:
+      type: object
+      properties:
+        nombre:
+          type: string
+        rol:
+          type: string
+          enum: *id004
+          description: Solo administrador
+        estado:
+          type: string
+          enum:
+          - activo
+          - bloqueado
+          description: Solo administrador
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        correo:
+          type: string
+          format: email
+        matricula:
+          type: string
+        rol:
+          type: string
+          enum: *id004
+        estado:
+          type: string
+          enum:
+          - activo
+          - bloqueado
+        creadoEn:
+          type: string
+          format: date-time
+      required:
+      - id
+      - nombre
+      - correo
+      - rol
+      - estado
+    Sancion:
+      type: object
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        motivo:
+          type: string
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        prestamoId:
+          type: integer
+      required:
+      - id
+      - usuarioId
+      - motivo
+      - inicio
+      - fin
+    LaboratorioEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        ubicacion:
+          type: string
+        encargadoId:
+          type: integer
+      required:
+      - nombre
+      - ubicacion
+    Laboratorio:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        ubicacion:
+          type: string
+        encargadoId:
+          type: integer
+      required:
+      - id
+      - nombre
+      - ubicacion
+    CategoriaEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        tipo:
+          type: string
+          enum:
+          - equipo
+          - espacio
+      required:
+      - nombre
+      - tipo
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        tipo:
+          type: string
+          enum:
+          - equipo
+          - espacio
+      required:
+      - id
+      - nombre
+      - tipo
+    RecursoEntrada:
+      type: object
+      properties:
+        nombre:
+          type: string
+        codigoInventario:
+          type: string
+        categoriaId:
+          type: integer
+        laboratorioId:
+          type: integer
+        descripcion:
+          type: string
+      required:
+      - nombre
+      - codigoInventario
+      - categoriaId
+      - laboratorioId
+    RecursoEstado:
+      type: object
+      properties:
+        estado:
+          type: string
+          enum:
+          - activo
+          - mantenimiento
+          - baja
+      required:
+      - estado
+    Recurso:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        codigoInventario:
+          type: string
+        categoriaId:
+          type: integer
+        laboratorioId:
+          type: integer
+        descripcion:
+          type: string
+        estado:
+          type: string
+          enum:
+          - activo
+          - mantenimiento
+          - baja
+        tipo:
+          type: string
+          enum:
+          - equipo
+          - espacio
+          description: Tipo de la categoría; dato informativo para Reservas
+        encargadoId:
+          type: integer
+          description: Encargado del laboratorio; dato informativo para Reservas
+      required:
+      - id
+      - nombre
+      - codigoInventario
+      - categoriaId
+      - laboratorioId
+      - estado
+    RecursoDisponible:
+      type: object
+      properties:
+        recursoId:
+          type: integer
+        nombre:
+          type: string
+        tipo:
+          type: string
+          enum:
+          - equipo
+          - espacio
+        laboratorioId:
+          type: integer
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+      required:
+      - recursoId
+      - nombre
+      - tipo
+      - laboratorioId
+      - inicio
+      - fin
+    ReservaCrear:
+      type: object
+      properties:
+        recursoId:
+          type: integer
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        usuarioId:
+          type: integer
+          description: Solo el encargado, para reservas en mostrador
+      required:
+      - recursoId
+      - inicio
+      - fin
+    ReservaActualizar:
+      type: object
+      properties:
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        estado:
+          type: string
+          enum:
+          - cancelada
+          description: Para cancelar la reserva
+    Reserva:
+      type: object
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        recursoId:
+          type: integer
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        estado:
+          type: string
+          enum:
+          - confirmada
+          - cancelada
+          - en_curso
+          - finalizada
+        creadaEn:
+          type: string
+          format: date-time
+      required:
+      - id
+      - usuarioId
+      - recursoId
+      - inicio
+      - fin
+      - estado
+    PrestamoCrear:
+      type: object
+      properties:
+        reservaId:
+          type: integer
+        observaciones:
+          type: string
+      required:
+      - reservaId
+    PrestamoDevolucion:
+      type: object
+      properties:
+        estadoDevolucion:
+          type: string
+          enum:
+          - correcto
+          - danado
+          - incompleto
+        observaciones:
+          type: string
+      required:
+      - estadoDevolucion
+    Prestamo:
+      type: object
+      properties:
+        id:
+          type: integer
+        reservaId:
+          type: integer
+        entregadoPor:
+          type: integer
+        fechaEntrega:
+          type: string
+          format: date-time
+        recibidoPor:
+          type: integer
+        fechaDevolucion:
+          type: string
+          format: date-time
+        estadoDevolucion:
+          type: string
+          enum:
+          - correcto
+          - danado
+          - incompleto
+        observaciones:
+          type: string
+        efectos:
+          type: object
+          properties:
+            retraso:
+              type: boolean
+            incidenciasCreadas:
+              type: array
+              items:
+                type: integer
+            recursoEstado:
+              type: string
+              enum:
+              - activo
+              - mantenimiento
+              - baja
+            sancionCreada:
+              type: integer
+          description: Consecuencias de la devolución (solo en la respuesta de PATCH)
+      required:
+      - id
+      - reservaId
+      - entregadoPor
+      - fechaEntrega
+    IncidenciaCrear:
+      type: object
+      properties:
+        prestamoId:
+          type: integer
+        tipo:
+          type: string
+          enum:
+          - dano
+          - faltante
+          - retraso
+        descripcion:
+          type: string
+      required:
+      - prestamoId
+      - tipo
+      - descripcion
+    Incidencia:
+      type: object
+      properties:
+        id:
+          type: integer
+        prestamoId:
+          type: integer
+        recursoId:
+          type: integer
+        tipo:
+          type: string
+          enum:
+          - dano
+          - faltante
+          - retraso
+        descripcion:
+          type: string
+        estado:
+          type: string
+          enum:
+          - abierta
+          - cerrada
+        creadaEn:
+          type: string
+          format: date-time
+      required:
+      - id
+      - prestamoId
+      - recursoId
+      - tipo
+      - estado
+    Notificacion:
+      type: object
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        tipo:
+          type: string
+          enum:
+          - confirmacion
+          - recordatorio
+          - retraso
+        mensaje:
+          type: string
+        leida:
+          type: boolean
+        estadoEnvio:
+          type: string
+          enum:
+          - pendiente
+          - enviada
+          - fallida
+        creadaEn:
+          type: string
+          format: date-time
+      required:
+      - id
+      - usuarioId
+      - tipo
+      - mensaje
+      - leida
+    NotificacionActualizar:
+      type: object
+      properties:
+        leida:
+          type: boolean
+      required:
+      - leida
+    ReporteUso:
+      type: object
+      properties:
+        desde:
+          type: string
+          format: date-time
+        hasta:
+          type: string
+          format: date-time
+        recursos:
+          type: array
+          items:
+            type: object
+            properties:
+              recursoId:
+                type: integer
+              nombre:
+                type: string
+              totalPrestamos:
+                type: integer
+              horasUso:
+                type: number
+      required:
+      - desde
+      - hasta
+      - recursos
+    ReporteOcupacion:
+      type: object
+      properties:
+        desde:
+          type: string
+          format: date-time
+        hasta:
+          type: string
+          format: date-time
+        laboratorios:
+          type: array
+          items:
+            type: object
+            properties:
+              laboratorioId:
+                type: integer
+              nombre:
+                type: string
+              porcentajeOcupacion:
+                type: number
+      required:
+      - desde
+      - hasta
+      - laboratorios
+    ReporteRetrasos:
+      type: object
+      properties:
+        desde:
+          type: string
+          format: date-time
+        hasta:
+          type: string
+          format: date-time
+        totalRetrasos:
+          type: integer
+        totalIncidencias:
+          type: integer
+        retrasos:
+          type: array
+          items:
+            type: object
+            properties:
+              prestamoId:
+                type: integer
+              usuarioId:
+                type: integer
+              minutosRetraso:
+                type: integer
+      required:
+      - desde
+      - hasta
+      - totalRetrasos
+      - totalIncidencias
+    UsuarioLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Usuario'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+    SancionLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sancion'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+    LaboratorioLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Laboratorio'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+    CategoriaLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Categoria'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+    RecursoLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recurso'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+    RecursoDisponibleLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecursoDisponible'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+    ReservaLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reserva'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+    IncidenciaLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Incidencia'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+    NotificacionLista:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notificacion'
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - data
+      - meta
+  responses:
+    E400:
+      description: 'Solicitud inválida. La petición está mal formada: JSON roto, campo obligatorio ausente, tipo
+        incorrecto o parámetro fuera de rango.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              codigo: VALIDACION_FALLIDA
+              mensaje: Los datos enviados no son válidos.
+              detalles:
+              - campo: fin
+                problema: Es obligatorio
+              ruta: /api/v1/reservas
+              fecha: '2026-11-02T18:40:12-06:00'
+              idPeticion: req-7f3a91c2
+    E401:
+      description: No autenticado. Falta el token, expiró o no es válido; o las credenciales del inicio de sesión
+        son incorrectas.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              codigo: TOKEN_INVALIDO
+              mensaje: El token no es válido o expiró. Inicie sesión de nuevo.
+              ruta: /api/v1/reservas
+              fecha: '2026-11-02T18:40:12-06:00'
+              idPeticion: req-7f3a91c2
+    E403:
+      description: Sin permiso. El usuario está autenticado, pero su rol o su propiedad sobre el registro no permiten
+        la operación.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              codigo: PERMISO_INSUFICIENTE
+              mensaje: Su rol no permite realizar esta operación.
+              ruta: /api/v1/usuarios/5
+              fecha: '2026-11-02T18:40:12-06:00'
+              idPeticion: req-7f3a91c2
+    E404:
+      description: No encontrado. El recurso indicado en la ruta no existe.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              codigo: NO_ENCONTRADO
+              mensaje: No existe un recurso con el identificador 9999.
+              ruta: /api/v1/recursos/9999
+              fecha: '2026-11-02T18:40:12-06:00'
+              idPeticion: req-7f3a91c2
+    E409:
+      description: 'Conflicto. La operación choca con el estado actual: reserva traslapada, correo o código de inventario
+        repetidos, estado incompatible.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              codigo: RESERVA_TRASLAPADA
+              mensaje: El recurso ya está reservado en ese horario.
+              detalles:
+              - campo: inicio
+                problema: Se traslapa con la reserva 31
+              ruta: /api/v1/reservas
+              fecha: '2026-11-02T18:40:12-06:00'
+              idPeticion: req-7f3a91c2
+    E422:
+      description: 'Regla de negocio incumplida. La petición está bien formada, pero viola una regla: límite de
+        reservas, usuario sancionado, recurso no reservable, fuera de plazo.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              codigo: LIMITE_RESERVAS_EXCEDIDO
+              mensaje: Alcanzó el límite de reservas vigentes de su rol (2).
+              ruta: /api/v1/reservas
+              fecha: '2026-11-02T18:40:12-06:00'
+              idPeticion: req-7f3a91c2
+    E429:
+      description: Demasiadas peticiones. El Gateway limitó la cantidad de peticiones de un mismo cliente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    E503:
+      description: Servicio no disponible. Un servicio del que depende la operación no respondió.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              codigo: SERVICIO_NO_DISPONIBLE
+              mensaje: No fue posible verificar el recurso. Intente de nuevo en unos minutos.
+              ruta: /api/v1/reservas
+              fecha: '2026-11-02T18:40:12-06:00'
+              idPeticion: req-7f3a91c2
+    E500:
+      description: Error interno. Falla inesperada del servicio; el mensaje no revela detalles internos.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

@@ -1,0 +1,896 @@
+{
+  "usuarios": {
+    "servicio": "Usuarios",
+    "baseDatos": "usuarios_db",
+    "tablas": {
+      "roles": {
+        "columnas": [
+          {
+            "nombre": "codigo",
+            "tipo": "character varying(15)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "descripcion",
+            "tipo": "character varying(160)",
+            "nulo": false,
+            "defecto": null
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "roles_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (codigo)",
+            "columnas": [
+              "codigo"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "roles_pkey",
+            "definicion": "CREATE UNIQUE INDEX roles_pkey ON public.roles USING btree (codigo)"
+          }
+        ],
+        "registros": 4
+      },
+      "sanciones": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('sanciones_id_seq'::regclass)"
+          },
+          {
+            "nombre": "usuario_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "motivo",
+            "tipo": "character varying(255)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "inicio",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": "now()"
+          },
+          {
+            "nombre": "fin",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "prestamo_id",
+            "tipo": "integer",
+            "nulo": true,
+            "defecto": null
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "sanciones_fin_posterior_inicio",
+            "tipo": "c",
+            "definicion": "CHECK ((fin > inicio))",
+            "columnas": [
+              "fin",
+              "inicio"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "sanciones_usuario_id_fkey",
+            "tipo": "f",
+            "definicion": "FOREIGN KEY (usuario_id) REFERENCES usuarios(id)",
+            "columnas": [
+              "usuario_id"
+            ],
+            "destino": "usuarios"
+          },
+          {
+            "nombre": "sanciones_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "idx_sanciones_usuario",
+            "definicion": "CREATE INDEX idx_sanciones_usuario ON public.sanciones USING btree (usuario_id, fin)"
+          },
+          {
+            "nombre": "sanciones_pkey",
+            "definicion": "CREATE UNIQUE INDEX sanciones_pkey ON public.sanciones USING btree (id)"
+          }
+        ],
+        "registros": 2
+      },
+      "usuarios": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('usuarios_id_seq'::regclass)"
+          },
+          {
+            "nombre": "nombre",
+            "tipo": "character varying(120)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "correo",
+            "tipo": "character varying(160)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "matricula",
+            "tipo": "character varying(20)",
+            "nulo": true,
+            "defecto": null
+          },
+          {
+            "nombre": "contrasena",
+            "tipo": "character varying(100)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "rol",
+            "tipo": "character varying(15)",
+            "nulo": false,
+            "defecto": "'alumno'::character varying"
+          },
+          {
+            "nombre": "estado",
+            "tipo": "character varying(10)",
+            "nulo": false,
+            "defecto": "'activo'::character varying"
+          },
+          {
+            "nombre": "creado_en",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": "now()"
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "usuarios_estado_check",
+            "tipo": "c",
+            "definicion": "CHECK (((estado)::text = ANY ((ARRAY['activo'::character varying, 'bloqueado'::character varying])::text[])))",
+            "columnas": [
+              "estado"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "usuarios_rol_fkey",
+            "tipo": "f",
+            "definicion": "FOREIGN KEY (rol) REFERENCES roles(codigo)",
+            "columnas": [
+              "rol"
+            ],
+            "destino": "roles"
+          },
+          {
+            "nombre": "usuarios_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "usuarios_correo_key",
+            "tipo": "u",
+            "definicion": "UNIQUE (correo)",
+            "columnas": [
+              "correo"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "idx_usuarios_rol",
+            "definicion": "CREATE INDEX idx_usuarios_rol ON public.usuarios USING btree (rol)"
+          },
+          {
+            "nombre": "usuarios_correo_key",
+            "definicion": "CREATE UNIQUE INDEX usuarios_correo_key ON public.usuarios USING btree (correo)"
+          },
+          {
+            "nombre": "usuarios_pkey",
+            "definicion": "CREATE UNIQUE INDEX usuarios_pkey ON public.usuarios USING btree (id)"
+          }
+        ],
+        "registros": 7
+      }
+    }
+  },
+  "inventario": {
+    "servicio": "Inventario",
+    "baseDatos": "inventario_db",
+    "tablas": {
+      "categorias": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('categorias_id_seq'::regclass)"
+          },
+          {
+            "nombre": "nombre",
+            "tipo": "character varying(80)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "tipo",
+            "tipo": "character varying(10)",
+            "nulo": false,
+            "defecto": null
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "categorias_tipo_check",
+            "tipo": "c",
+            "definicion": "CHECK (((tipo)::text = ANY ((ARRAY['equipo'::character varying, 'espacio'::character varying])::text[])))",
+            "columnas": [
+              "tipo"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "categorias_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "categorias_nombre_key",
+            "tipo": "u",
+            "definicion": "UNIQUE (nombre)",
+            "columnas": [
+              "nombre"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "categorias_nombre_key",
+            "definicion": "CREATE UNIQUE INDEX categorias_nombre_key ON public.categorias USING btree (nombre)"
+          },
+          {
+            "nombre": "categorias_pkey",
+            "definicion": "CREATE UNIQUE INDEX categorias_pkey ON public.categorias USING btree (id)"
+          }
+        ],
+        "registros": 6
+      },
+      "laboratorios": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('laboratorios_id_seq'::regclass)"
+          },
+          {
+            "nombre": "nombre",
+            "tipo": "character varying(120)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "ubicacion",
+            "tipo": "character varying(160)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "encargado_id",
+            "tipo": "integer",
+            "nulo": true,
+            "defecto": null
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "laboratorios_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "laboratorios_nombre_key",
+            "tipo": "u",
+            "definicion": "UNIQUE (nombre)",
+            "columnas": [
+              "nombre"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "laboratorios_nombre_key",
+            "definicion": "CREATE UNIQUE INDEX laboratorios_nombre_key ON public.laboratorios USING btree (nombre)"
+          },
+          {
+            "nombre": "laboratorios_pkey",
+            "definicion": "CREATE UNIQUE INDEX laboratorios_pkey ON public.laboratorios USING btree (id)"
+          }
+        ],
+        "registros": 3
+      },
+      "recursos": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('recursos_id_seq'::regclass)"
+          },
+          {
+            "nombre": "nombre",
+            "tipo": "character varying(120)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "codigo_inventario",
+            "tipo": "character varying(40)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "categoria_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "laboratorio_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "descripcion",
+            "tipo": "character varying(500)",
+            "nulo": true,
+            "defecto": null
+          },
+          {
+            "nombre": "estado",
+            "tipo": "character varying(15)",
+            "nulo": false,
+            "defecto": "'activo'::character varying"
+          },
+          {
+            "nombre": "creado_en",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": "now()"
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "recursos_estado_check",
+            "tipo": "c",
+            "definicion": "CHECK (((estado)::text = ANY ((ARRAY['activo'::character varying, 'mantenimiento'::character varying, 'baja'::character varying])::text[])))",
+            "columnas": [
+              "estado"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "recursos_categoria_id_fkey",
+            "tipo": "f",
+            "definicion": "FOREIGN KEY (categoria_id) REFERENCES categorias(id)",
+            "columnas": [
+              "categoria_id"
+            ],
+            "destino": "categorias"
+          },
+          {
+            "nombre": "recursos_laboratorio_id_fkey",
+            "tipo": "f",
+            "definicion": "FOREIGN KEY (laboratorio_id) REFERENCES laboratorios(id)",
+            "columnas": [
+              "laboratorio_id"
+            ],
+            "destino": "laboratorios"
+          },
+          {
+            "nombre": "recursos_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "recursos_codigo_inventario_key",
+            "tipo": "u",
+            "definicion": "UNIQUE (codigo_inventario)",
+            "columnas": [
+              "codigo_inventario"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "idx_recursos_cat",
+            "definicion": "CREATE INDEX idx_recursos_cat ON public.recursos USING btree (categoria_id)"
+          },
+          {
+            "nombre": "idx_recursos_lab",
+            "definicion": "CREATE INDEX idx_recursos_lab ON public.recursos USING btree (laboratorio_id)"
+          },
+          {
+            "nombre": "recursos_codigo_inventario_key",
+            "definicion": "CREATE UNIQUE INDEX recursos_codigo_inventario_key ON public.recursos USING btree (codigo_inventario)"
+          },
+          {
+            "nombre": "recursos_pkey",
+            "definicion": "CREATE UNIQUE INDEX recursos_pkey ON public.recursos USING btree (id)"
+          }
+        ],
+        "registros": 12
+      }
+    }
+  },
+  "reservas": {
+    "servicio": "Reservas",
+    "baseDatos": "reservas_db",
+    "tablas": {
+      "incidencias": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('incidencias_id_seq'::regclass)"
+          },
+          {
+            "nombre": "prestamo_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "recurso_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "tipo",
+            "tipo": "character varying(10)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "descripcion",
+            "tipo": "character varying(500)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "estado",
+            "tipo": "character varying(10)",
+            "nulo": false,
+            "defecto": "'abierta'::character varying"
+          },
+          {
+            "nombre": "creada_en",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": "now()"
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "incidencias_estado_check",
+            "tipo": "c",
+            "definicion": "CHECK (((estado)::text = ANY ((ARRAY['abierta'::character varying, 'cerrada'::character varying])::text[])))",
+            "columnas": [
+              "estado"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "incidencias_tipo_check",
+            "tipo": "c",
+            "definicion": "CHECK (((tipo)::text = ANY ((ARRAY['dano'::character varying, 'faltante'::character varying, 'retraso'::character varying])::text[])))",
+            "columnas": [
+              "tipo"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "incidencias_prestamo_id_fkey",
+            "tipo": "f",
+            "definicion": "FOREIGN KEY (prestamo_id) REFERENCES prestamos(id)",
+            "columnas": [
+              "prestamo_id"
+            ],
+            "destino": "prestamos"
+          },
+          {
+            "nombre": "incidencias_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "idx_incidencias_prestamo",
+            "definicion": "CREATE INDEX idx_incidencias_prestamo ON public.incidencias USING btree (prestamo_id)"
+          },
+          {
+            "nombre": "incidencias_pkey",
+            "definicion": "CREATE UNIQUE INDEX incidencias_pkey ON public.incidencias USING btree (id)"
+          }
+        ],
+        "registros": 4
+      },
+      "prestamos": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('prestamos_id_seq'::regclass)"
+          },
+          {
+            "nombre": "reserva_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "entregado_por",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "fecha_entrega",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": "now()"
+          },
+          {
+            "nombre": "recibido_por",
+            "tipo": "integer",
+            "nulo": true,
+            "defecto": null
+          },
+          {
+            "nombre": "fecha_devolucion",
+            "tipo": "timestamp with time zone",
+            "nulo": true,
+            "defecto": null
+          },
+          {
+            "nombre": "estado_devolucion",
+            "tipo": "character varying(12)",
+            "nulo": true,
+            "defecto": null
+          },
+          {
+            "nombre": "observaciones",
+            "tipo": "character varying(500)",
+            "nulo": true,
+            "defecto": null
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "prestamos_estado_devolucion_check",
+            "tipo": "c",
+            "definicion": "CHECK (((estado_devolucion)::text = ANY ((ARRAY['correcto'::character varying, 'danado'::character varying, 'incompleto'::character varying])::text[])))",
+            "columnas": [
+              "estado_devolucion"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "prestamos_reserva_id_fkey",
+            "tipo": "f",
+            "definicion": "FOREIGN KEY (reserva_id) REFERENCES reservas(id)",
+            "columnas": [
+              "reserva_id"
+            ],
+            "destino": "reservas"
+          },
+          {
+            "nombre": "prestamos_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "prestamos_reserva_id_key",
+            "tipo": "u",
+            "definicion": "UNIQUE (reserva_id)",
+            "columnas": [
+              "reserva_id"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "prestamos_pkey",
+            "definicion": "CREATE UNIQUE INDEX prestamos_pkey ON public.prestamos USING btree (id)"
+          },
+          {
+            "nombre": "prestamos_reserva_id_key",
+            "definicion": "CREATE UNIQUE INDEX prestamos_reserva_id_key ON public.prestamos USING btree (reserva_id)"
+          }
+        ],
+        "registros": 4
+      },
+      "reservas": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('reservas_id_seq'::regclass)"
+          },
+          {
+            "nombre": "usuario_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "recurso_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "laboratorio_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "encargado_id",
+            "tipo": "integer",
+            "nulo": true,
+            "defecto": null
+          },
+          {
+            "nombre": "inicio",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "fin",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "estado",
+            "tipo": "character varying(12)",
+            "nulo": false,
+            "defecto": "'confirmada'::character varying"
+          },
+          {
+            "nombre": "creada_en",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": "now()"
+          },
+          {
+            "nombre": "recordatorio_enviado",
+            "tipo": "boolean",
+            "nulo": false,
+            "defecto": "false"
+          },
+          {
+            "nombre": "retraso_avisado",
+            "tipo": "boolean",
+            "nulo": false,
+            "defecto": "false"
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "reservas_estado_check",
+            "tipo": "c",
+            "definicion": "CHECK (((estado)::text = ANY ((ARRAY['confirmada'::character varying, 'cancelada'::character varying, 'en_curso'::character varying, 'finalizada'::character varying])::text[])))",
+            "columnas": [
+              "estado"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "reservas_fin_posterior_inicio",
+            "tipo": "c",
+            "definicion": "CHECK ((fin > inicio))",
+            "columnas": [
+              "fin",
+              "inicio"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "reservas_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "reservas_sin_traslape",
+            "tipo": "x",
+            "definicion": "EXCLUDE USING gist (recurso_id WITH =, tstzrange(inicio, fin) WITH &&) WHERE (((estado)::text = ANY ((ARRAY['confirmada'::character varying, 'en_curso'::character varying])::text[])))",
+            "columnas": [
+              "recurso_id",
+              null
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "idx_reservas_lab",
+            "definicion": "CREATE INDEX idx_reservas_lab ON public.reservas USING btree (laboratorio_id, inicio)"
+          },
+          {
+            "nombre": "idx_reservas_usuario",
+            "definicion": "CREATE INDEX idx_reservas_usuario ON public.reservas USING btree (usuario_id)"
+          },
+          {
+            "nombre": "reservas_pkey",
+            "definicion": "CREATE UNIQUE INDEX reservas_pkey ON public.reservas USING btree (id)"
+          },
+          {
+            "nombre": "reservas_sin_traslape",
+            "definicion": "CREATE INDEX reservas_sin_traslape ON public.reservas USING gist (recurso_id, tstzrange(inicio, fin)) WHERE ((estado)::text = ANY ((ARRAY['confirmada'::character varying, 'en_curso'::character varying])::text[]))"
+          }
+        ],
+        "registros": 7
+      }
+    }
+  },
+  "notificaciones": {
+    "servicio": "Notificaciones",
+    "baseDatos": "notificaciones_db",
+    "tablas": {
+      "notificaciones": {
+        "columnas": [
+          {
+            "nombre": "id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": "nextval('notificaciones_id_seq'::regclass)"
+          },
+          {
+            "nombre": "usuario_id",
+            "tipo": "integer",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "tipo",
+            "tipo": "character varying(15)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "mensaje",
+            "tipo": "character varying(500)",
+            "nulo": false,
+            "defecto": null
+          },
+          {
+            "nombre": "leida",
+            "tipo": "boolean",
+            "nulo": false,
+            "defecto": "false"
+          },
+          {
+            "nombre": "estado_envio",
+            "tipo": "character varying(10)",
+            "nulo": false,
+            "defecto": "'pendiente'::character varying"
+          },
+          {
+            "nombre": "creada_en",
+            "tipo": "timestamp with time zone",
+            "nulo": false,
+            "defecto": "now()"
+          }
+        ],
+        "restricciones": [
+          {
+            "nombre": "notificaciones_estado_envio_check",
+            "tipo": "c",
+            "definicion": "CHECK (((estado_envio)::text = ANY ((ARRAY['pendiente'::character varying, 'enviada'::character varying, 'fallida'::character varying])::text[])))",
+            "columnas": [
+              "estado_envio"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "notificaciones_tipo_check",
+            "tipo": "c",
+            "definicion": "CHECK (((tipo)::text = ANY ((ARRAY['confirmacion'::character varying, 'recordatorio'::character varying, 'retraso'::character varying])::text[])))",
+            "columnas": [
+              "tipo"
+            ],
+            "destino": null
+          },
+          {
+            "nombre": "notificaciones_pkey",
+            "tipo": "p",
+            "definicion": "PRIMARY KEY (id)",
+            "columnas": [
+              "id"
+            ],
+            "destino": null
+          }
+        ],
+        "indices": [
+          {
+            "nombre": "idx_notif_usuario",
+            "definicion": "CREATE INDEX idx_notif_usuario ON public.notificaciones USING btree (usuario_id, leida)"
+          },
+          {
+            "nombre": "notificaciones_pkey",
+            "definicion": "CREATE UNIQUE INDEX notificaciones_pkey ON public.notificaciones USING btree (id)"
+          }
+        ],
+        "registros": 5
+      }
+    }
+  }
+}

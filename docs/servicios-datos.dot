@@ -1,0 +1,29 @@
+digraph SD {
+ graph [rankdir=TB, fontname="DejaVu Sans", nodesep=0.7, ranksep=0.75, pad=0.2, newrank=true];
+ node [fontname="DejaVu Sans", fontsize=11, style="filled,rounded", shape=box, penwidth=1.6, margin="0.18,0.1"];
+ edge [fontname="DejaVu Sans", fontsize=10];
+ gw [label=<<B>API Gateway</B><BR/><FONT POINT-SIZE="9">Entrada única: valida JWT y reenvía cada<BR/>petición al servicio dueño del recurso</FONT>>, fillcolor="#EDEDED", color="#595959"];
+ rep [label=<<B>Reportes</B><BR/><FONT POINT-SIZE="9">solo lectura</FONT>>, fillcolor="#8C8C8C", color="#595959", fontcolor=white];
+ usr [label=<<B>Usuarios y<BR/>Autenticación</B>>, fillcolor="#3F72AF", color="#2C5282", fontcolor=white];
+ res [label=<<B>Reservas y<BR/>Préstamos</B>>, fillcolor="#D1792B", color="#A35A1C", fontcolor=white];
+ inv [label=<<B>Inventario</B>>, fillcolor="#3F8F4F", color="#2F6B3B", fontcolor=white];
+ not [label=<<B>Notificaciones</B>>, fillcolor="#7E57B0", color="#5E3F87", fontcolor=white];
+ node [shape=cylinder, style="filled", fontsize=10, margin="0.15,0.1"];
+ dbu [label=<<B>usuarios_db</B><BR/>roles<BR/>usuarios<BR/>sanciones>, fillcolor="#E3EEFA", color="#3F72AF"];
+ dbr [label=<<B>reservas_db</B><BR/>reservas<BR/>prestamos<BR/>incidencias>, fillcolor="#FCE9D6", color="#D1792B"];
+ dbi [label=<<B>inventario_db</B><BR/>laboratorios<BR/>categorias<BR/>recursos>, fillcolor="#E2F2E2", color="#3F8F4F"];
+ dbn [label=<<B>notificaciones_db</B><BR/>notificaciones>, fillcolor="#EDE3F6", color="#7E57B0"];
+ { rank=same; gw; rep; }
+ { rank=same; usr; res; inv; }
+ { rank=same; dbu; dbr; dbi; not; }
+ gw -> usr [style=invis]; gw -> rep [style=invis];
+ usr -> res [style=invis]; res -> inv [style=invis];
+ edge [arrowhead=none, penwidth=2.2];
+ usr -> dbu [color="#3F72AF"]; res -> dbr [color="#D1792B"]; inv -> dbi [color="#3F8F4F"]; not -> dbn [color="#7E57B0"];
+ edge [arrowhead=normal, style=dashed, penwidth=1.5, color="#C0392B", fontcolor="#C0392B"];
+ res -> usr [label=" I-01 · I-02 ", constraint=false];
+ res -> inv [label=" GET · I-03 ", constraint=false];
+ res -> not [label=" I-04 (no bloquea) ", constraint=false];
+ rep -> res [label=" I-06 "];
+ rep -> inv [label=" I-05 "];
+}

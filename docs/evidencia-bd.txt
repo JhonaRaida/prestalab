@@ -1,0 +1,161 @@
+Border style is 1.
+Null display is "(nulo)".
+
+=================== A. CONTEO DE REGISTROS POR TABLA ===================
+You are now connected to database "usuarios_db" as user "prestalab".
+    base     |   tabla   | registros 
+-------------+-----------+-----------
+ usuarios_db | roles     |         4
+ usuarios_db | usuarios  |         7
+ usuarios_db | sanciones |         2
+(3 rows)
+
+You are now connected to database "inventario_db" as user "prestalab".
+     base      |    tabla     | registros 
+---------------+--------------+-----------
+ inventario_db | laboratorios |         3
+ inventario_db | categorias   |         6
+ inventario_db | recursos     |        12
+(3 rows)
+
+You are now connected to database "reservas_db" as user "prestalab".
+    base     |    tabla    | registros 
+-------------+-------------+-----------
+ reservas_db | reservas    |         7
+ reservas_db | prestamos   |         4
+ reservas_db | incidencias |         4
+(3 rows)
+
+You are now connected to database "notificaciones_db" as user "prestalab".
+       base        |     tabla      | registros 
+-------------------+----------------+-----------
+ notificaciones_db | notificaciones |         5
+(1 row)
+
+
+=================== B. CONSULTAS BÁSICAS (JOIN dentro de cada base) ===================
+--- B1. Usuarios por rol (usuarios_db: usuarios + roles)
+You are now connected to database "usuarios_db" as user "prestalab".
+      rol      | usuarios 
+---------------+----------
+ administrador |        1
+ alumno        |        3
+ docente       |        1
+ encargado     |        2
+(4 rows)
+
+--- B2. Sanciones vigentes (usuarios_db: sanciones + usuarios)
+ usuario |        correo        |                  motivo                  |       fin        
+---------+----------------------+------------------------------------------+------------------
+       7 | alumno3@prestalab.mx | Retraso de 140 minutos en la devolución  | 2026-10-29 22:20
+(1 row)
+
+--- B3. Recursos con su laboratorio y categoría (inventario_db)
+You are now connected to database "inventario_db" as user "prestalab".
+ id | codigo  |          nombre           |      categoria       |        laboratorio         |    estado     
+----+---------+---------------------------+----------------------+----------------------------+---------------
+  1 | LAP-001 | Laptop Dell 01            | Laptops              | Laboratorio de Cómputo     | activo
+  2 | LAP-002 | Laptop Dell 02            | Laptops              | Laboratorio de Cómputo     | activo
+  3 | LAP-003 | Laptop HP 03              | Laptops              | Laboratorio de Cómputo     | mantenimiento
+  4 | PRO-001 | Proyector Epson 01        | Proyectores          | Laboratorio de Cómputo     | activo
+  5 | AUL-001 | Aula de Cómputo 1         | Aulas de práctica    | Laboratorio de Cómputo     | activo
+  6 | CUB-001 | Cubículo de estudio 1     | Cubículos de estudio | Laboratorio de Cómputo     | activo
+  7 | SWI-001 | Switch Cisco 2960         | Switches y routers   | Laboratorio de Redes       | activo
+  8 | ROU-001 | Router Cisco 1941         | Switches y routers   | Laboratorio de Redes       | activo
+  9 | AUL-002 | Aula de Redes             | Aulas de práctica    | Laboratorio de Redes       | activo
+ 10 | OSC-001 | Osciloscopio Tektronix 01 | Osciloscopios        | Laboratorio de Electrónica | activo
+ 11 | OSC-002 | Osciloscopio Tektronix 02 | Osciloscopios        | Laboratorio de Electrónica | activo
+ 12 | AUL-003 | Aula de Electrónica       | Aulas de práctica    | Laboratorio de Electrónica | activo
+(12 rows)
+
+--- B4. Préstamos con su reserva, minutos de retraso e incidencias (reservas_db)
+You are now connected to database "reservas_db" as user "prestalab".
+ prestamo | reserva | recurso | estado_res | devolucion | min_retraso | incidencias 
+----------+---------+---------+------------+------------+-------------+-------------
+        1 |       1 |       1 | finalizada | correcto   |           0 |           0
+        2 |       2 |       4 | finalizada | correcto   |          95 |           1
+        3 |       3 |       3 | finalizada | danado     |           0 |           1
+        4 |       4 |       8 | finalizada | incompleto |         140 |           2
+(4 rows)
+
+--- B5. Recursos ocupados mañana de 10:00 a 11:00 (consulta que usa /disponibilidad)
+ recurso_id 
+------------
+          2
+(1 row)
+
+--- B6. Notificaciones no leídas por usuario (notificaciones_db)
+You are now connected to database "notificaciones_db" as user "prestalab".
+ usuario_id | sin_leer 
+------------+----------
+          4 |        2
+          7 |        1
+(2 rows)
+
+
+=================== C. PRUEBAS DE RESTRICCIONES (cada una debe ser RECHAZADA, salvo C2) ===================
+You are now connected to database "reservas_db" as user "prestalab".
+--- C1. EXCLUDE: reservar el recurso 2 traslapado con la reserva 5 (mañana 10:30-11:30) -> debe fallar
+BEGIN
+psql:db/verificar.sql:57: ERROR:  conflicting key value violates exclusion constraint "reservas_sin_traslape"
+DETAIL:  Key (recurso_id, tstzrange(inicio, fin))=(2, ["2026-10-28 10:30:00-06","2026-10-28 11:30:00-06")) conflicts with existing key (recurso_id, tstzrange(inicio, fin))=(2, ["2026-10-28 10:00:00-06","2026-10-28 11:00:00-06")).
+ROLLBACK
+--- C2. EXCLUDE: reservar el recurso 2 justo DESPUÉS (11:00-12:00) -> debe PERMITIRSE
+BEGIN
+INSERT 0 1
+ROLLBACK
+--- C3. FOREIGN KEY: préstamo de una reserva inexistente -> debe fallar
+BEGIN
+psql:db/verificar.sql:66: ERROR:  insert or update on table "prestamos" violates foreign key constraint "prestamos_reserva_id_fkey"
+DETAIL:  Key (reserva_id)=(9999) is not present in table "reservas".
+ROLLBACK
+--- C4. UNIQUE: segundo préstamo para la reserva 1 -> debe fallar
+BEGIN
+psql:db/verificar.sql:70: ERROR:  duplicate key value violates unique constraint "prestamos_reserva_id_key"
+DETAIL:  Key (reserva_id)=(1) already exists.
+ROLLBACK
+--- C5. CHECK: reserva con fin anterior al inicio -> debe fallar
+BEGIN
+psql:db/verificar.sql:75: ERROR:  new row for relation "reservas" violates check constraint "reservas_fin_posterior_inicio"
+DETAIL:  Failing row contains (13, 4, 6, 1, null, 2026-11-01 22:26:55.053605-06, 2026-10-31 22:26:55.053605-06, confirmada, 2026-10-27 22:26:55.053605-06, f, f).
+ROLLBACK
+--- C6. CHECK: tipo de incidencia inválido -> debe fallar
+BEGIN
+psql:db/verificar.sql:79: ERROR:  new row for relation "incidencias" violates check constraint "incidencias_tipo_check"
+DETAIL:  Failing row contains (6, 1, 1, robo, x, abierta, 2026-10-27 22:26:55.053966-06).
+ROLLBACK
+You are now connected to database "usuarios_db" as user "prestalab".
+--- C7. UNIQUE: correo repetido -> debe fallar
+BEGIN
+psql:db/verificar.sql:84: ERROR:  duplicate key value violates unique constraint "usuarios_correo_key"
+DETAIL:  Key (correo)=(admin@prestalab.mx) already exists.
+ROLLBACK
+--- C8. FOREIGN KEY: rol que no existe en el catálogo -> debe fallar
+BEGIN
+psql:db/verificar.sql:88: ERROR:  insert or update on table "usuarios" violates foreign key constraint "usuarios_rol_fkey"
+DETAIL:  Key (rol)=(superadmin) is not present in table "roles".
+ROLLBACK
+--- C9. NOT NULL: usuario sin nombre -> debe fallar
+BEGIN
+psql:db/verificar.sql:92: ERROR:  null value in column "nombre" of relation "usuarios" violates not-null constraint
+DETAIL:  Failing row contains (13, null, sinnombre@prestalab.mx, 1, x, alumno, activo, 2026-10-27 22:26:55.059708-06).
+ROLLBACK
+You are now connected to database "inventario_db" as user "prestalab".
+--- C10. UNIQUE: código de inventario repetido -> debe fallar
+BEGIN
+psql:db/verificar.sql:97: ERROR:  duplicate key value violates unique constraint "recursos_codigo_inventario_key"
+DETAIL:  Key (codigo_inventario)=(LAP-001) already exists.
+ROLLBACK
+--- C11. CHECK: estado de recurso inválido -> debe fallar
+BEGIN
+psql:db/verificar.sql:101: ERROR:  new row for relation "recursos" violates check constraint "recursos_estado_check"
+DETAIL:  Failing row contains (1, Laptop Dell 01, LAP-001, 1, 1, Laptop con 16 GB de RAM, roto, 2026-10-27 22:20:35.188004-06).
+ROLLBACK
+--- C12. FOREIGN KEY: recurso con categoría inexistente -> debe fallar
+BEGIN
+psql:db/verificar.sql:105: ERROR:  insert or update on table "recursos" violates foreign key constraint "recursos_categoria_id_fkey"
+DETAIL:  Key (categoria_id)=(999) is not present in table "categorias".
+ROLLBACK
+You are now connected to database "postgres" as user "prestalab".
+
+Verificación terminada: la BD quedó intacta (todas las pruebas se revirtieron).

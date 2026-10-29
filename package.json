@@ -1,0 +1,54 @@
+{
+  "name": "prestalab",
+  "version": "1.0.0",
+  "description": "PrestaLab - Control de reservas y préstamos de equipo y espacios de laboratorio (SOA con API Gateway y 5 servicios)",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start:gateway": "node gateway/src/index.js",
+    "start:usuarios": "node services/usuarios/src/index.js",
+    "start:inventario": "node services/inventario/src/index.js",
+    "start:reservas": "node services/reservas/src/index.js",
+    "start:notificaciones": "node services/notificaciones/src/index.js",
+    "start:reportes": "node services/reportes/src/index.js",
+    "start": "node scripts/iniciar-todo.js",
+    "db:crear": "node scripts/crear-bases.js",
+    "db:reiniciar": "node scripts/crear-bases.js --reiniciar",
+    "test": "jest --runInBand --coverage --forceExit",
+    "carga": "node scripts/carga.js",
+    "contrato": "node scripts/validar-contrato.js",
+    "postman": "node scripts/generar-postman.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 30000,
+    "collectCoverageFrom": [
+      "shared/**/*.js",
+      "gateway/src/**/*.js",
+      "services/*/src/**/*.js",
+      "!**/index.js"
+    ]
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "http-proxy-middleware": "^3.0.5",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.9.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "jest": "^30.5.2",
+    "supertest": "^7.3.1"
+  }
+}

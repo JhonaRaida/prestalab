@@ -1,0 +1,98 @@
+# PrestaLab: un solo comando levanta PostgreSQL + 5 servicios + API Gateway.
+#   cp .env.example .env   (y cambia JWT_SECRET y SERVICE_TOKEN)
+#   docker compose up --build
+# Solo el Gateway se publica al exterior (puerto 8080); los servicios y la BD quedan en la red interna.
+
+x-servicio: &servicio
+  build: .
+  restart: unless-stopped
+  env_file: .env
+  depends_on:
+    postgres:
+      condition: service_healthy
+  environment: &entorno
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    URL_USUARIOS: http://usuarios:3001
+    URL_INVENTARIO: http://inventario:3002
+    URL_RESERVAS: http://reservas:3003
+    URL_NOTIFICACIONES: http://notificaciones:3004
+    URL_REPORTES: http://reportes:3005
+    PORT_USUARIOS: "3001"
+    PORT_INVENTARIO: "3002"
+    PORT_RESERVAS: "3003"
+    PORT_NOTIFICACIONES: "3004"
+    PORT_REPORTES: "3005"
+    PORT_GATEWAY: "8080"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-prestalab}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-prestalab}
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro      # crea las 4 bases la primera vez
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${DB_USER:-prestalab}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  usuarios:
+    <<: *servicio
+    command: ["node", "services/usuarios/src/index.js"]
+    healthcheck: &salud
+      test: ["CMD-SHELL", "wget -qO- http://localhost:$$PORT/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    environment: { <<: *entorno, PORT: "3001" }
+
+  inventario:
+    <<: *servicio
+    command: ["node", "services/inventario/src/index.js"]
+    healthcheck: *salud
+    environment: { <<: *entorno, PORT: "3002" }
+
+  reservas:
+    <<: *servicio
+    command: ["node", "services/reservas/src/index.js"]
+    healthcheck: *salud
+    environment: { <<: *entorno, PORT: "3003" }
+
+  notificaciones:
+    <<: *servicio
+    command: ["node", "services/notificaciones/src/index.js"]
+    healthcheck: *salud
+    environment: { <<: *entorno, PORT: "3004" }
+
+  reportes:
+    <<: *servicio
+    command: ["node", "services/reportes/src/index.js"]
+    healthcheck: *salud
+    environment: { <<: *entorno, PORT: "3005" }
+
+  gateway:
+    <<: *servicio
+    command: ["node", "gateway/src/index.js"]
+    ports:
+      - "${PORT_GATEWAY:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      postgres: { condition: service_healthy }
+      usuarios: { condition: service_started }
+      inventario: { condition: service_started }
+      reservas: { condition: service_started }
+      notificaciones: { condition: service_started }
+      reportes: { condition: service_started }
+
+volumes:
+  pgdata:
