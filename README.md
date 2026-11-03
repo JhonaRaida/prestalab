@@ -136,7 +136,7 @@ npm run carga                            # en otra
 ```
 Resultado de referencia (50 usuarios, 15 s, todo en una laptop/VM de 2 núcleos): ~530 peticiones/s, **p95 ≈ 130 ms**, 0 errores.
 
-### 4.6 Demostrar la tolerancia a fallos (para la defensa)
+### 4.6 Demostrar la tolerancia a fallos
 Con Docker, mientras el sistema corre:
 ```bash
 docker compose stop notificaciones     # las reservas SIGUEN funcionando (aviso "no bloqueante")
@@ -185,7 +185,7 @@ Para arrancar los servicios **sin** datos de prueba: `DATOS_PRUEBA=off` en `.env
 
 ---
 
-## 6. Decisiones de diseño que conviene saber explicar
+## 6. Decisiones de diseño
 
 - **Sin traslapes garantizado por la base de datos.** `reservas` tiene una restricción `EXCLUDE USING gist (recurso_id WITH =, tstzrange(inicio, fin) WITH &&)` para reservas vigentes. Aunque dos peticiones lleguen al mismo milisegundo, PostgreSQL rechaza la segunda y la API responde `409 RESERVA_TRASLAPADA`. El límite de reservas por usuario se protege con un `pg_advisory_xact_lock` dentro de la transacción.
 - **Devolución transaccional.** Registrar la devolución actualiza préstamo y reserva, crea incidencias, pone el recurso en mantenimiento (Inventario) y crea la sanción (Usuarios). Si Inventario o Usuarios no responden, **se revierte todo** y se responde 503; se puede reintentar sin dejar datos a medias.
@@ -226,7 +226,7 @@ Para arrancar los servicios **sin** datos de prueba: `DATOS_PRUEBA=off` en `.env
 
 ---
 
-## 9. Flujo de trabajo en Git (como pide el proyecto)
+## 9. Flujo de trabajo en Git
 
 Commits pequeños con mensajes claros y una etiqueta por entrega:
 ```bash
