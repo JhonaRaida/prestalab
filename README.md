@@ -203,11 +203,11 @@ Para arrancar los servicios **sin** datos de prueba: `DATOS_PRUEBA=off` en `.env
 
 ---
 
-## 7. Qué está simulado o pendiente (honestidad ante el docente)
+## 7. Limitaciones actuales
 
-- El **envío de correo** es simulado (se imprime en la consola del servicio y se guarda la notificación como `enviada`). Para uno real, solo hay que cambiar la función `enviar` de `services/notificaciones/src/service.js` por un envío SMTP.
-- Los datos de prueba usan una contraseña conocida; **no** son para producción.
-- No hay interfaz gráfica: el alcance del proyecto es el backend y su API.
+- El **envío de correo** es simulado: el aviso se imprime en la consola del servicio y la notificación se guarda como `enviada`. Para usar correo real basta con cambiar la función `enviar` de `services/notificaciones/src/service.js` por un envío SMTP.
+- Los datos de prueba usan una contraseña conocida, por lo que **no** son para producción.
+- Por ahora no hay interfaz gráfica: el alcance del proyecto es el backend y su API.
 
 ---
 
