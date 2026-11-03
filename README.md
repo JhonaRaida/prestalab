@@ -228,8 +228,10 @@ Para arrancar los servicios **sin** datos de prueba: `DATOS_PRUEBA=off` en `.env
 
 ## 9. Flujo de trabajo en Git
 
-Commits pequeños con mensajes claros y una etiqueta por entrega:
+El equipo trabaja con commits pequeños y mensajes claros. Cada entrega se marca con una etiqueta (`entrega-1` a `entrega-8`) y sus documentos están en `entregas/entrega-N/`.
+
+Para marcar una entrega nueva:
 ```bash
 git tag entrega-5 && git push --tags
 ```
-Etiquetas sugeridas: `entrega-1` … `entrega-8`. Nunca subas `.env` ni contraseñas reales.
+El archivo `.env` y las contraseñas reales nunca se suben al repositorio.
