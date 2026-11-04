@@ -103,3 +103,74 @@ Consulta de un id que no existe. Responde **404 Not Found** con el código `NO_E
 ### Ejecución completa de la colección
 
 [`evidencias/reporte-postman.html`](evidencias/reporte-postman.html): resultado de ejecutar las 61 peticiones de la colección con Newman (91 verificaciones, 0 fallas). Descárgalo y ábrelo en el navegador para ver cada petición con su respuesta.
+
+## Evidencias complementarias
+
+Además de las capturas de Postman, se ejecutó la misma secuencia para el **segundo CRUD (Reservas)** y para el **error 500**. Cada petición quedó guardada con su respuesta real en [`evidencias/evidencias-crud.json`](evidencias/evidencias-crud.json). Se puede repetir en la defensa con el sistema corriendo:
+
+```bash
+npm run evidencias
+```
+
+### CRUD de Reservas
+
+Con la cuenta `alumno1`. En Reservas, **eliminar es cancelar**: la reserva cambia a `"estado": "cancelada"` y libera el horario, pero se conserva en el historial (misma regla de baja lógica que en Recursos, Entrega 3 E-23).
+
+| # | Evidencia que se pide | Petición | Resultado |
+|---|---|---|---|
+| 8 | Crear un registro | `POST /reservas` con `{ "recursoId", "inicio", "fin" }` | 201 Created |
+| 9 | Consultar varios registros | `GET /reservas?page=1&limit=3` | 200 OK |
+| 10 | Consultar un registro | `GET /reservas/11` | 200 OK |
+| 11 | Modificar un registro (horario) | `PATCH /reservas/11` con `{ "inicio", "fin" }` | 200 OK |
+| 12 | Eliminar un registro (cancelar) | `PATCH /reservas/11` con `{"estado":"cancelada"}` | 200 OK |
+| 13 | Comprobar la cancelación | `GET /reservas/11` | 200 OK |
+| 14 | Error de validación (falta `fin`) | `POST /reservas` sin `fin` | 400 Bad Request |
+| 15 | Registro inexistente | `GET /reservas/999999` | 404 Not Found |
+
+Respuesta de la consulta 13, después de cancelar:
+
+```json
+{
+  "id": 11,
+  "usuarioId": 4,
+  "recursoId": 1,
+  "inicio": "2026-11-08T16:00:00.000Z",
+  "fin": "2026-11-08T18:00:00.000Z",
+  "estado": "cancelada",
+  "creadaEn": "2026-11-04T16:03:05.872Z"
+}
+```
+
+### Error 500
+
+Se detuvo PostgreSQL unos segundos y se consultó un recurso. El cliente recibe un mensaje genérico, sin detalles internos:
+
+```json
+{
+  "error": {
+    "codigo": "ERROR_INTERNO",
+    "mensaje": "Ocurrió un error inesperado. Intenta de nuevo más tarde.",
+    "ruta": "/api/v1/recursos/1",
+    "fecha": "2026-11-04T16:03:30.604Z",
+    "idPeticion": "req-f73ce06c"
+  }
+}
+```
+
+El error real (`connect ECONNREFUSED 127.0.0.1:5432`) solo quedó en el log del servidor, con el mismo `idPeticion`. Al encender PostgreSQL de nuevo, la misma consulta respondió 200 sin reiniciar los servicios. La prueba `un error inesperado no revela detalles internos` de [`test/unit.test.js`](../../test/unit.test.js) comprueba lo mismo.
+
+### Los datos quedan en la base
+
+Consulta directa a `reservas_db` después de la secuencia:
+
+```
+reservas_db=> SELECT id, usuario_id, recurso_id, inicio, fin, estado FROM reservas WHERE id = 11;
+ id | usuario_id | recurso_id |         inicio         |          fin           |  estado   
+----+------------+------------+------------------------+------------------------+-----------
+ 11 |          4 |          1 | 2026-11-08 16:00:00+00 | 2026-11-08 18:00:00+00 | cancelada
+(1 row)
+```
+
+## Documento de la entrega
+
+[`Entrega5_PrestaLab.pdf`](Entrega5_PrestaLab.pdf) (y su versión [`.docx`](Entrega5_PrestaLab.docx)) reúne este reporte en el formato de las entregas anteriores, con la bitácora de cambios completa.
