@@ -11,6 +11,9 @@ Cambios en las herramientas de prueba y la documentación:
 1. **Colección de Postman con inicio de sesión automático.** Antes había que correr primero la carpeta "1. Autenticación" para tener los tokens; si no, las peticiones respondían 401. Ahora la colección revisa antes de cada petición si tiene el token de la cuenta que usa y, si falta o ya venció, inicia sesión sola. "Crear recurso" genera su propio código de inventario.
 2. **Duración del token documentada.** `.env.example` incluye `JWT_EXPIRA_SEGUNDOS` (por defecto 3600 = 1 hora), que el sistema ya permitía configurar.
 3. **Documentación reorganizada.** El `README.md` quedó solo con instalación y ejecución; la parte técnica pasó a `docs/arquitectura.md` y este registro de cambios a `docs/cambios.md`.
+4. **Contrato sin marca de borrador.** `docs/openapi.yaml` pasa de `1.0.0-borrador` a `1.0.0` porque ya está implementado; los endpoints y esquemas no cambian.
+5. **Evidencias repetibles.** `npm run evidencias` (`scripts/evidencias-crud.js`) ejecuta los CRUD de Recursos y Reservas y los errores 400, 404 y 401, y guarda cada petición con su respuesta en `entregas/entrega-5/evidencias/evidencias-crud.json`.
+6. **Reservas como segundo CRUD.** «Eliminar» una reserva es cancelarla con `PATCH /reservas/{id}` (E-23): cambia de estado y no se borra, igual que la baja lógica de Recursos (E-18), para no perder el historial que usan los reportes y las sanciones.
 
 ## Entrega 4 — Modelo de datos y persistencia
 

@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
   title: PrestaLab API
-  version: 1.0.0-borrador
-  description: Borrador de la API de PrestaLab (Entrega 3). Todas las rutas pasan por el API Gateway. Las rutas
-    /internal/v1 son solo entre servicios y no se publican.
+  version: 1.0.0
+  description: API de PrestaLab, implementada a partir del contrato de la Entrega 3. Todas las rutas pasan por el
+    API Gateway. Las rutas /internal/v1 son solo entre servicios y no se publican.
 servers:
 - url: http://localhost:8080/api/v1
   description: Gateway local (Docker Compose)
