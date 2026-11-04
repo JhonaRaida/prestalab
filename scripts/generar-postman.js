@@ -1,5 +1,6 @@
 // Genera postman/PrestaLab.postman_collection.json y el entorno. Uso: node scripts/generar-postman.js
 // La colección se ejecuta de arriba hacia abajo (Runner) y encadena variables: tokens, ids, fechas.
+// También se puede usar petición por petición: un script de la colección inicia sesión solo cuando falta el token o ya venció.
 const fs = require('fs');
 const path = require('path');
 
@@ -50,7 +51,8 @@ for (const [v, correo] of cuentas) {
 req('Registrar usuario nuevo (RF-01)', 'POST', '/usuarios', {
   pre: [`pm.collectionVariables.set('correoNuevo', 'nuevo' + Date.now() + '@prueba.mx');`],
   body: { nombre: 'Estudiante de Prueba', correo: '{{correoNuevo}}', matricula: '0239999', contrasena: 'Prestalab123' },
-  tests: [status(201), 'const r = pm.response.json();', `pm.test('Rol alumno y sin contraseña', () => { pm.expect(r.rol).to.eql('alumno'); pm.expect(r).to.not.have.property('contrasena'); });`, guardar('usuarioNuevoId', 'r.id')],
+  tests: [status(201), 'const r = pm.response.json();', `pm.test('Rol alumno y sin contraseña', () => { pm.expect(r.rol).to.eql('alumno'); pm.expect(r).to.not.have.property('contrasena'); });`, guardar('usuarioNuevoId', 'r.id'),
+    `pm.collectionVariables.unset('token_nuevo');`],
 });
 req('Iniciar sesión (usuario nuevo)', 'POST', '/sesiones', {
   body: { correo: '{{correoNuevo}}', contrasena: 'Prestalab123' },
@@ -77,7 +79,7 @@ req('Reemplazar laboratorio (PUT)', 'PUT', '/laboratorios/{{laboratorioNuevoId}}
 req('Crear categoría', 'POST', '/categorias', { token: 'token_admin', body: { nombre: 'Categoría {{sufijo}}', tipo: 'equipo' }, tests: [status(201)] });
 req('Listar categorías de espacios', 'GET', '/categorias', { token: 'token_alumno', query: { tipo: 'espacio' }, tests: [status(200)] });
 req('Crear recurso (encargado)', 'POST', '/recursos', {
-  token: 'token_encargado', body: { nombre: 'Laptop de prueba {{sufijo}}', codigoInventario: 'PM-{{sufijo}}', categoriaId: 1, laboratorioId: 1, descripcion: 'Creada desde Postman' },
+  token: 'token_encargado', pre: [`pm.collectionVariables.set('sufijo', String(Date.now()));`], body: { nombre: 'Laptop de prueba {{sufijo}}', codigoInventario: 'PM-{{sufijo}}', categoriaId: 1, laboratorioId: 1, descripcion: 'Creada desde Postman' },
   tests: [status(201), guardar('recursoId', 'pm.response.json().id')],
 });
 req('Crear recurso con código repetido → 409', 'POST', '/recursos', { token: 'token_encargado', body: { nombre: 'Otra', codigoInventario: 'PM-{{sufijo}}', categoriaId: 1, laboratorioId: 1 }, tests: [status(409), codigo('CODIGO_INVENTARIO_REPETIDO')] });
@@ -151,11 +153,48 @@ req('Credenciales incorrectas → 401', 'POST', '/sesiones', { body: { correo: '
 req('Ruta inexistente → 404', 'GET', '/cosas', { token: 'token_admin', tests: [status(404)] });
 
 // ---------------------------------------------------------------------------------------------
+// Inicio de sesión automático: antes de cada petición revisa el token que usa ({{token_...}});
+// si falta o vence en menos de un minuto, inicia sesión con la cuenta correspondiente.
+const correos = Object.fromEntries(cuentas.map(([v, correo]) => ['token_' + v, correo]));
+const sesionAutomatica = pre([
+  `const correos = ${JSON.stringify(correos)};`,
+  `const m = /\\{\\{(token_\\w+)\\}\\}/.exec(pm.request.headers.get('Authorization') || '');`,
+  `const vigente = (t) => {`,
+  `  try {`,
+  `    const p = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');`,
+  `    return JSON.parse(atob(p + '='.repeat((4 - p.length % 4) % 4))).exp * 1000 > Date.now() + 60000;`,
+  `  } catch (e) { return false; }`,
+  `};`,
+  `if (m && !vigente(pm.collectionVariables.get(m[1]))) {`,
+  `  const v = m[1];`,
+  `  const base = pm.variables.replaceIn('{{baseUrl}}');`,
+  `  const enviar = (ruta, cuerpo, listo) => pm.sendRequest({ url: base + ruta, method: 'POST',`,
+  `    header: { 'Content-Type': 'application/json' }, body: { mode: 'raw', raw: JSON.stringify(cuerpo) } }, listo);`,
+  `  const iniciar = (correo) => enviar('/sesiones', { correo, contrasena: 'Prestalab123' }, (err, res) => {`,
+  `    if (!err && res.code === 201) pm.collectionVariables.set(v, res.json().tokenAcceso);`,
+  `  });`,
+  `  if (v !== 'token_nuevo') iniciar(correos[v]);`,
+  `  else if (pm.collectionVariables.get('correoNuevo')) iniciar(pm.collectionVariables.get('correoNuevo'));`,
+  `  else {`,
+  `    const correo = 'nuevo' + Date.now() + '@prueba.mx';`,
+  `    enviar('/usuarios', { nombre: 'Estudiante de Prueba', correo, matricula: '0239999', contrasena: 'Prestalab123' }, (err, res) => {`,
+  `      if (err || res.code !== 201) return;`,
+  `      pm.collectionVariables.set('correoNuevo', correo);`,
+  `      pm.collectionVariables.set('usuarioNuevoId', res.json().id);`,
+  `      iniciar(correo);`,
+  `    });`,
+  `  }`,
+  `}`,
+]);
+
 const coleccion = {
   info: {
     name: 'PrestaLab API (Entrega 5-8)', schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
-    description: 'Colección de PrestaLab. Ejecútala completa con el Runner (de arriba hacia abajo): encadena tokens e ids con variables. Cuentas de demostración: contraseña Prestalab123.',
+    description: 'Colección de PrestaLab. Ejecútala completa con el Runner (de arriba hacia abajo): encadena tokens e ids con variables. '
+      + 'También se puede enviar petición por petición: si falta el token de la cuenta que usa o ya venció, la colección inicia sesión sola. '
+      + 'Cuentas de demostración: contraseña Prestalab123.',
   },
+  event: [sesionAutomatica],
   variable: [{ key: 'baseUrl', value: 'http://localhost:8080/api/v1' }],
   item: items,
 };

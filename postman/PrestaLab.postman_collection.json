@@ -2,8 +2,46 @@
   "info": {
     "name": "PrestaLab API (Entrega 5-8)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Colección de PrestaLab. Ejecútala completa con el Runner (de arriba hacia abajo): encadena tokens e ids con variables. Cuentas de demostración: contraseña Prestalab123."
+    "description": "Colección de PrestaLab. Ejecútala completa con el Runner (de arriba hacia abajo): encadena tokens e ids con variables. También se puede enviar petición por petición: si falta el token de la cuenta que usa o ya venció, la colección inicia sesión sola. Cuentas de demostración: contraseña Prestalab123."
   },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const correos = {\"token_alumno\":\"alumno1@prestalab.mx\",\"token_docente\":\"docente@prestalab.mx\",\"token_encargado\":\"encargado1@prestalab.mx\",\"token_encargado2\":\"encargado2@prestalab.mx\",\"token_admin\":\"admin@prestalab.mx\"};",
+          "const m = /\\{\\{(token_\\w+)\\}\\}/.exec(pm.request.headers.get('Authorization') || '');",
+          "const vigente = (t) => {",
+          "  try {",
+          "    const p = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+          "    return JSON.parse(atob(p + '='.repeat((4 - p.length % 4) % 4))).exp * 1000 > Date.now() + 60000;",
+          "  } catch (e) { return false; }",
+          "};",
+          "if (m && !vigente(pm.collectionVariables.get(m[1]))) {",
+          "  const v = m[1];",
+          "  const base = pm.variables.replaceIn('{{baseUrl}}');",
+          "  const enviar = (ruta, cuerpo, listo) => pm.sendRequest({ url: base + ruta, method: 'POST',",
+          "    header: { 'Content-Type': 'application/json' }, body: { mode: 'raw', raw: JSON.stringify(cuerpo) } }, listo);",
+          "  const iniciar = (correo) => enviar('/sesiones', { correo, contrasena: 'Prestalab123' }, (err, res) => {",
+          "    if (!err && res.code === 201) pm.collectionVariables.set(v, res.json().tokenAcceso);",
+          "  });",
+          "  if (v !== 'token_nuevo') iniciar(correos[v]);",
+          "  else if (pm.collectionVariables.get('correoNuevo')) iniciar(pm.collectionVariables.get('correoNuevo'));",
+          "  else {",
+          "    const correo = 'nuevo' + Date.now() + '@prueba.mx';",
+          "    enviar('/usuarios', { nombre: 'Estudiante de Prueba', correo, matricula: '0239999', contrasena: 'Prestalab123' }, (err, res) => {",
+          "      if (err || res.code !== 201) return;",
+          "      pm.collectionVariables.set('correoNuevo', correo);",
+          "      pm.collectionVariables.set('usuarioNuevoId', res.json().id);",
+          "      iniciar(correo);",
+          "    });",
+          "  }",
+          "}"
+        ]
+      }
+    }
+  ],
   "variable": [
     {
       "key": "baseUrl",
@@ -255,7 +293,8 @@
                   "pm.test('Código 201', () => pm.response.to.have.status(201));",
                   "const r = pm.response.json();",
                   "pm.test('Rol alumno y sin contraseña', () => { pm.expect(r.rol).to.eql('alumno'); pm.expect(r).to.not.have.property('contrasena'); });",
-                  "pm.collectionVariables.set('usuarioNuevoId', r.id);"
+                  "pm.collectionVariables.set('usuarioNuevoId', r.id);",
+                  "pm.collectionVariables.unset('token_nuevo');"
                 ]
               }
             }
@@ -877,6 +916,15 @@
         {
           "name": "Crear recurso (encargado)",
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('sufijo', String(Date.now()));"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
