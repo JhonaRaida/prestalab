@@ -72,7 +72,7 @@ cp .env.example .env
 
 Cambia el valor de `JWT_SECRET` y de `SERVICE_TOKEN` por cualquier texto largo, por ejemplo `miClaveSuperLarga123abc456def`. Son las claves con las que el sistema firma los inicios de sesión. Guarda el archivo y ciérralo.
 
-El archivo `.env` se queda solo en tu computadora: nunca se sube al repositorio.
+El archivo `.env` se queda solo en tu computadora.
 
 ## Paso 4. Levantar el sistema
 
