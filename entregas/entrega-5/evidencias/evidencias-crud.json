@@ -1,0 +1,441 @@
+{
+  "fecha": "2026-11-04T16:03:05.916Z",
+  "recursoId": 16,
+  "reservaId": 11,
+  "pasos": [
+    {
+      "id": "R1",
+      "titulo": "Crear un recurso",
+      "metodo": "POST",
+      "ruta": "/api/v1/recursos",
+      "cuerpo": {
+        "nombre": "Osciloscopio digital",
+        "codigoInventario": "EV5-85797",
+        "categoriaId": 1,
+        "laboratorioId": 1,
+        "descripcion": "Alta para la evidencia de la Entrega 5"
+      },
+      "status": 201,
+      "respuesta": {
+        "id": 16,
+        "nombre": "Osciloscopio digital",
+        "codigoInventario": "EV5-85797",
+        "categoriaId": 1,
+        "laboratorioId": 1,
+        "descripcion": "Alta para la evidencia de la Entrega 5",
+        "estado": "activo",
+        "tipo": "equipo",
+        "encargadoId": 2
+      }
+    },
+    {
+      "id": "R2",
+      "titulo": "Consultar varios recursos (con filtros y paginación)",
+      "metodo": "GET",
+      "ruta": "/api/v1/recursos?laboratorioId=1&page=1&limit=3",
+      "cuerpo": null,
+      "status": 200,
+      "respuesta": {
+        "data": [
+          {
+            "id": 1,
+            "nombre": "Laptop Dell 01",
+            "codigoInventario": "LAP-001",
+            "categoriaId": 1,
+            "laboratorioId": 1,
+            "descripcion": "Laptop con 16 GB de RAM",
+            "estado": "activo",
+            "tipo": "equipo",
+            "encargadoId": 2
+          },
+          {
+            "id": 2,
+            "nombre": "Laptop Dell 02",
+            "codigoInventario": "LAP-002",
+            "categoriaId": 1,
+            "laboratorioId": 1,
+            "descripcion": "Laptop con 16 GB de RAM",
+            "estado": "activo",
+            "tipo": "equipo",
+            "encargadoId": 2
+          },
+          {
+            "id": 3,
+            "nombre": "Laptop HP 03",
+            "codigoInventario": "LAP-003",
+            "categoriaId": 1,
+            "laboratorioId": 1,
+            "descripcion": "Laptop con 8 GB de RAM (pantalla dañada)",
+            "estado": "mantenimiento",
+            "tipo": "equipo",
+            "encargadoId": 2
+          }
+        ],
+        "meta": {
+          "page": 1,
+          "limit": 3,
+          "total": 9
+        }
+      }
+    },
+    {
+      "id": "R3",
+      "titulo": "Consultar un recurso",
+      "metodo": "GET",
+      "ruta": "/api/v1/recursos/16",
+      "cuerpo": null,
+      "status": 200,
+      "respuesta": {
+        "id": 16,
+        "nombre": "Osciloscopio digital",
+        "codigoInventario": "EV5-85797",
+        "categoriaId": 1,
+        "laboratorioId": 1,
+        "descripcion": "Alta para la evidencia de la Entrega 5",
+        "estado": "activo",
+        "tipo": "equipo",
+        "encargadoId": 2
+      }
+    },
+    {
+      "id": "R4",
+      "titulo": "Modificar un recurso (PUT)",
+      "metodo": "PUT",
+      "ruta": "/api/v1/recursos/16",
+      "cuerpo": {
+        "nombre": "Osciloscopio digital 100 MHz",
+        "codigoInventario": "EV5-85797",
+        "categoriaId": 1,
+        "laboratorioId": 1,
+        "descripcion": "Datos corregidos"
+      },
+      "status": 200,
+      "respuesta": {
+        "id": 16,
+        "nombre": "Osciloscopio digital 100 MHz",
+        "codigoInventario": "EV5-85797",
+        "categoriaId": 1,
+        "laboratorioId": 1,
+        "descripcion": "Datos corregidos",
+        "estado": "activo",
+        "tipo": "equipo",
+        "encargadoId": 2
+      }
+    },
+    {
+      "id": "R5",
+      "titulo": "Modificar el estado (PATCH)",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/recursos/16",
+      "cuerpo": {
+        "estado": "mantenimiento"
+      },
+      "status": 200,
+      "respuesta": {
+        "id": 16,
+        "nombre": "Osciloscopio digital 100 MHz",
+        "codigoInventario": "EV5-85797",
+        "categoriaId": 1,
+        "laboratorioId": 1,
+        "descripcion": "Datos corregidos",
+        "estado": "mantenimiento",
+        "tipo": "equipo",
+        "encargadoId": 2
+      }
+    },
+    {
+      "id": "R6",
+      "titulo": "Eliminar (dar de baja) el recurso",
+      "metodo": "DELETE",
+      "ruta": "/api/v1/recursos/16",
+      "cuerpo": null,
+      "status": 204,
+      "respuesta": null
+    },
+    {
+      "id": "R7",
+      "titulo": "Comprobar la baja",
+      "metodo": "GET",
+      "ruta": "/api/v1/recursos/16",
+      "cuerpo": null,
+      "status": 200,
+      "respuesta": {
+        "id": 16,
+        "nombre": "Osciloscopio digital 100 MHz",
+        "codigoInventario": "EV5-85797",
+        "categoriaId": 1,
+        "laboratorioId": 1,
+        "descripcion": "Datos corregidos",
+        "estado": "baja",
+        "tipo": "equipo",
+        "encargadoId": 2
+      }
+    },
+    {
+      "id": "R8",
+      "titulo": "Error de validación: faltan campos",
+      "metodo": "POST",
+      "ruta": "/api/v1/recursos",
+      "cuerpo": {
+        "nombre": "x"
+      },
+      "status": 400,
+      "respuesta": {
+        "error": {
+          "codigo": "VALIDACION_FALLIDA",
+          "mensaje": "Los datos enviados no son válidos.",
+          "ruta": "/api/v1/recursos",
+          "fecha": "2026-11-04T16:03:05.849Z",
+          "idPeticion": "req-c04861e6",
+          "detalles": [
+            {
+              "campo": "codigoInventario",
+              "problema": "Es obligatorio"
+            },
+            {
+              "campo": "categoriaId",
+              "problema": "Debe ser un número"
+            },
+            {
+              "campo": "laboratorioId",
+              "problema": "Debe ser un número"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "R9",
+      "titulo": "Recurso inexistente",
+      "metodo": "GET",
+      "ruta": "/api/v1/recursos/999999",
+      "cuerpo": null,
+      "status": 404,
+      "respuesta": {
+        "error": {
+          "codigo": "NO_ENCONTRADO",
+          "mensaje": "El recurso no existe.",
+          "ruta": "/api/v1/recursos/999999",
+          "fecha": "2026-11-04T16:03:05.854Z",
+          "idPeticion": "req-509714a5"
+        }
+      }
+    },
+    {
+      "id": "V1",
+      "titulo": "Crear una reserva",
+      "metodo": "POST",
+      "ruta": "/api/v1/reservas",
+      "cuerpo": {
+        "recursoId": 1,
+        "inicio": "2026-11-07T16:00:00.000Z",
+        "fin": "2026-11-07T17:00:00.000Z"
+      },
+      "status": 201,
+      "respuesta": {
+        "id": 11,
+        "usuarioId": 4,
+        "recursoId": 1,
+        "inicio": "2026-11-07T16:00:00.000Z",
+        "fin": "2026-11-07T17:00:00.000Z",
+        "estado": "confirmada",
+        "creadaEn": "2026-11-04T16:03:05.872Z"
+      }
+    },
+    {
+      "id": "V2",
+      "titulo": "Consultar varias reservas (historial)",
+      "metodo": "GET",
+      "ruta": "/api/v1/reservas?page=1&limit=3",
+      "cuerpo": null,
+      "status": 200,
+      "respuesta": {
+        "data": [
+          {
+            "id": 11,
+            "usuarioId": 4,
+            "recursoId": 1,
+            "inicio": "2026-11-07T16:00:00.000Z",
+            "fin": "2026-11-07T17:00:00.000Z",
+            "estado": "confirmada",
+            "creadaEn": "2026-11-04T16:03:05.872Z"
+          },
+          {
+            "id": 5,
+            "usuarioId": 4,
+            "recursoId": 2,
+            "inicio": "2026-11-05T10:00:00.000Z",
+            "fin": "2026-11-05T11:00:00.000Z",
+            "estado": "confirmada",
+            "creadaEn": "2026-11-04T16:01:59.155Z"
+          },
+          {
+            "id": 1,
+            "usuarioId": 4,
+            "recursoId": 1,
+            "inicio": "2026-11-01T10:00:00.000Z",
+            "fin": "2026-11-01T12:00:00.000Z",
+            "estado": "finalizada",
+            "creadaEn": "2026-11-04T16:01:59.155Z"
+          }
+        ],
+        "meta": {
+          "page": 1,
+          "limit": 3,
+          "total": 3
+        }
+      }
+    },
+    {
+      "id": "V3",
+      "titulo": "Consultar una reserva",
+      "metodo": "GET",
+      "ruta": "/api/v1/reservas/11",
+      "cuerpo": null,
+      "status": 200,
+      "respuesta": {
+        "id": 11,
+        "usuarioId": 4,
+        "recursoId": 1,
+        "inicio": "2026-11-07T16:00:00.000Z",
+        "fin": "2026-11-07T17:00:00.000Z",
+        "estado": "confirmada",
+        "creadaEn": "2026-11-04T16:03:05.872Z"
+      }
+    },
+    {
+      "id": "V4",
+      "titulo": "Modificar el horario",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/reservas/11",
+      "cuerpo": {
+        "inicio": "2026-11-08T16:00:00.000Z",
+        "fin": "2026-11-08T18:00:00.000Z"
+      },
+      "status": 200,
+      "respuesta": {
+        "id": 11,
+        "usuarioId": 4,
+        "recursoId": 1,
+        "inicio": "2026-11-08T16:00:00.000Z",
+        "fin": "2026-11-08T18:00:00.000Z",
+        "estado": "confirmada",
+        "creadaEn": "2026-11-04T16:03:05.872Z"
+      }
+    },
+    {
+      "id": "V5",
+      "titulo": "Eliminar (cancelar) la reserva",
+      "metodo": "PATCH",
+      "ruta": "/api/v1/reservas/11",
+      "cuerpo": {
+        "estado": "cancelada"
+      },
+      "status": 200,
+      "respuesta": {
+        "id": 11,
+        "usuarioId": 4,
+        "recursoId": 1,
+        "inicio": "2026-11-08T16:00:00.000Z",
+        "fin": "2026-11-08T18:00:00.000Z",
+        "estado": "cancelada",
+        "creadaEn": "2026-11-04T16:03:05.872Z"
+      }
+    },
+    {
+      "id": "V6",
+      "titulo": "Comprobar la cancelación",
+      "metodo": "GET",
+      "ruta": "/api/v1/reservas/11",
+      "cuerpo": null,
+      "status": 200,
+      "respuesta": {
+        "id": 11,
+        "usuarioId": 4,
+        "recursoId": 1,
+        "inicio": "2026-11-08T16:00:00.000Z",
+        "fin": "2026-11-08T18:00:00.000Z",
+        "estado": "cancelada",
+        "creadaEn": "2026-11-04T16:03:05.872Z"
+      }
+    },
+    {
+      "id": "V7",
+      "titulo": "Error de validación: falta \"fin\"",
+      "metodo": "POST",
+      "ruta": "/api/v1/reservas",
+      "cuerpo": {
+        "recursoId": 1,
+        "inicio": "2026-11-07T16:00:00.000Z"
+      },
+      "status": 400,
+      "respuesta": {
+        "error": {
+          "codigo": "VALIDACION_FALLIDA",
+          "mensaje": "Los datos enviados no son válidos.",
+          "ruta": "/api/v1/reservas",
+          "fecha": "2026-11-04T16:03:05.907Z",
+          "idPeticion": "req-fe9dfffe",
+          "detalles": [
+            {
+              "campo": "fin",
+              "problema": "Es obligatorio"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "V8",
+      "titulo": "Reserva inexistente",
+      "metodo": "GET",
+      "ruta": "/api/v1/reservas/999999",
+      "cuerpo": null,
+      "status": 404,
+      "respuesta": {
+        "error": {
+          "codigo": "NO_ENCONTRADO",
+          "mensaje": "La reserva no existe.",
+          "ruta": "/api/v1/reservas/999999",
+          "fecha": "2026-11-04T16:03:05.910Z",
+          "idPeticion": "req-c73eb891"
+        }
+      }
+    },
+    {
+      "id": "X1",
+      "titulo": "Ruta inexistente",
+      "metodo": "GET",
+      "ruta": "/api/v1/cosas",
+      "cuerpo": null,
+      "status": 404,
+      "respuesta": {
+        "error": {
+          "codigo": "NO_ENCONTRADO",
+          "mensaje": "La ruta solicitada no existe.",
+          "ruta": "/api/v1/cosas",
+          "fecha": "2026-11-04T16:03:05.913Z",
+          "idPeticion": "req-77914c7a"
+        }
+      }
+    },
+    {
+      "id": "X2",
+      "titulo": "Petición sin token",
+      "metodo": "GET",
+      "ruta": "/api/v1/recursos",
+      "rol": "sin token",
+      "cuerpo": null,
+      "status": 401,
+      "respuesta": {
+        "error": {
+          "codigo": "TOKEN_INVALIDO",
+          "mensaje": "Falta el token de acceso o no es válido.",
+          "ruta": "/api/v1/recursos",
+          "fecha": "2026-11-04T16:03:05.915Z",
+          "idPeticion": "req-fbe39806"
+        }
+      }
+    }
+  ]
+}
