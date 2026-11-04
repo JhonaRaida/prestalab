@@ -1,0 +1,8 @@
+# Finales de línea LF en todos los sistemas (evita cambios falsos al editar desde Windows)
+* text=auto eol=lf
+
+# Archivos binarios: Git no los modifica
+*.png binary
+*.jpg binary
+*.pdf binary
+*.docx binary
