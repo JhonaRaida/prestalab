@@ -198,6 +198,16 @@ npx -p newman -p newman-reporter-htmlextra newman run postman/PrestaLab.postman_
 
 Necesita Node.js, que se descarga de su página oficial: <https://nodejs.org>. Muestra el resultado de cada petición y genera `reporte-postman.html` para verlo en el navegador.
 
+### Evidencias de los CRUD (Entrega 5)
+
+Con el sistema corriendo y Node.js instalado:
+
+```bash
+npm run evidencias
+```
+
+Crea, consulta, modifica y da de baja un recurso y una reserva, y provoca errores 400, 404 y 401. Cada petición queda guardada con su respuesta en `entregas/entrega-5/evidencias/evidencias-crud.json`.
+
 ### Con Swagger, desde el navegador
 
 1. Entra a <http://localhost:8080/docs>.
