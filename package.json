@@ -19,6 +19,7 @@
     "db:reiniciar": "node scripts/crear-bases.js --reiniciar",
     "test": "jest --runInBand --coverage --forceExit",
     "carga": "node scripts/carga.js",
+    "evidencias": "node scripts/evidencias-crud.js",
     "contrato": "node scripts/validar-contrato.js",
     "postman": "node scripts/generar-postman.js"
   },
