@@ -1,0 +1,40 @@
+# Checklist de seguridad — Entrega 7
+
+**Proyecto:** PrestaLab · **Revisión:** 18 de noviembre de 2026 · **Resultado: 8 de 8 puntos cumplidos** (con las limitaciones de la sección 3)
+
+Cada punto indica cómo se revisó, cómo se comprueba de forma repetible y, si había un defecto, cuál era y cómo se corrigió (ver [`defectos.md`](defectos.md)).
+
+## 1. Checklist básico
+
+| # | Punto | Estado | Cómo se cumple | Comprobación |
+|---|---|:---:|---|---|
+| 1 | No existen contraseñas en texto plano en la base de datos | ✅ | `bcryptjs` con sal aleatoria (`services/usuarios/src/service.js`). La contraseña se limita a 72 caracteres, el máximo que procesa bcrypt. La API nunca devuelve el hash. Los datos de prueba también traen hash. | `seguridad.test.js` → *Contraseñas y datos sensibles* (3): consulta `usuarios_db` y exige formato `$2a$/$2b$` en **todos** los usuarios, incluido uno recién registrado, y comprueba que dos usuarios con la misma contraseña tienen hash distinto. |
+| 2 | No existen secretos reales dentro del repositorio | ✅ | `.env` está en `.gitignore` y `.dockerignore`; `.env.example` solo trae valores de ejemplo. **D-04:** en producción el sistema se niega a arrancar si `JWT_SECRET` o `SERVICE_TOKEN` son los de ejemplo, están vacíos o miden menos de 16 caracteres. | `seguridad.test.js` → *Secretos y configuración* (4): `.env` no está versionado, el ejemplo contiene solo `cambia-este…`, ningún archivo versionado contiene claves privadas ni secretos escritos a mano, y la validación de producción rechaza 5 configuraciones inseguras. Además se verificó a mano: `NODE_ENV=production` con el secreto de ejemplo → el proceso termina con un mensaje claro. |
+| 3 | Los endpoints protegidos verifican autenticación | ✅ | El Gateway exige un JWT (HS256, algoritmo fijado, vigencia de 1 h) en todo `/api/v1` salvo `POST /sesiones` y `POST /usuarios`. Los servicios exigen además el `X-Service-Token` interno, así que no se puede saltar el Gateway. | `seguridad.test.js` → *autenticación* (32 + 5): una prueba **por cada operación protegida de `docs/openapi.yaml`** (31) sin token → 401, y 5 tokens manipulados (`alg: none`, otro secreto, expirado, sin `Bearer`, basura) → 401. `e2e.test.js`: llamar a un servicio directo → 401. |
+| 4 | Los endpoints sensibles verifican autorización | ✅ | `exigirRol(...)` en cada ruta sensible; la identidad se toma del JWT validado por el Gateway, **nunca** de lo que mande el cliente (se descartan `X-User-*`). Además hay reglas por dueño del registro (un alumno solo ve lo suyo; un encargado solo opera su laboratorio). | `seguridad.test.js` → *autorización* (18): un alumno recibe 403 en 15 operaciones de personal/administrador; no ve ni modifica a otro usuario; no puede subirse el rol ni desbloquearse. `e2e.test.js`: la identidad falsificada con `X-User-*` se ignora. |
+| 5 | Las entradas del usuario se validan | ✅ | Esquemas Zod `strict()` en cada controlador (rechazan campos extra: no hay asignación masiva), consultas SQL parametrizadas sin ORM, cuerpo limitado a 100 KB. **D-01:** ids y páginas ahora se acotan al rango `INTEGER` (antes provocaban un 500). | `seguridad.test.js` → *entradas* (15): 5 rutas con id fuera de rango, 5 listados con `page`/`limit` inválidos, filtros, tipos incorrectos, campos extra, cuerpo de 200 KB e intentos de inyección SQL (las tablas siguen intactas). |
+| 6 | Los errores no revelan información interna | ✅ | Formato único de error (`shared/errors.js`). Un 500 devuelve solo `ERROR_INTERNO`; el detalle va al log del servidor con el `idPeticion`. El login responde igual si falla el correo o la contraseña. Sin `X-Powered-By`; `helmet` agrega las cabeceras de seguridad. | `unit.test.js`: un error con «password=secreta» no aparece en la respuesta. `seguridad.test.js` → *errores* (2): 10 respuestas de error distintas no contienen pila de llamadas, nombres de archivo, SQL, `postgres` ni `constraint`. |
+| 7 | Existe manejo de CORS acorde al proyecto | ✅ | **D-03:** lista blanca `CORS_ORIGINS` (vacía por defecto: el proyecto es solo backend y ningún sitio externo debe llamarlo desde un navegador). Nunca se usa `*`, ni se permiten credenciales, ni el origen `null`. Va antes de la autenticación para que el *preflight* funcione. | `seguridad.test.js` → *CORS* (4): sin lista → ninguna cabecera `Access-Control-*`; con un origen en la lista → ese origen y solo ese recibe permiso (métodos, cabeceras `Authorization`/`Content-Type`); `null` se rechaza. `npm run humo` lo verifica tras desplegar. |
+| 8 | La API no acepta operaciones imposibles sin validación | ✅ | Reglas en el servidor y en la base de datos, no en el cliente: restricción `EXCLUDE` contra traslapes, `CHECK (fin > inicio)`, límite de reservas por rol con `pg_advisory_xact_lock`, recurso en mantenimiento no reservable, devolución transaccional. **D-02:** una cuenta bloqueada ya no puede iniciar sesión. | `e2e.test.js` → *RF-04/05/06/07* (19), incluida la prueba de 8 reservas simultáneas; `seguridad.test.js` → *Cuentas bloqueadas* (3) y *Concurrencia* (3). |
+
+## 2. Revisión adicional (más allá del checklist)
+
+| Tema | Resultado |
+|---|---|
+| **Fuerza bruta en el login** | Límite de 20 inicios de sesión por minuto y por IP en el Gateway (429 `DEMASIADAS_PETICIONES`), configurable con `LIMITE_SESIONES_MIN`. Probado en `e2e.test.js`. |
+| **Enumeración de cuentas por tiempo de respuesta** | El login compara contra un hash falso cuando el correo no existe, para igualar el tiempo. |
+| **Rutas internas** | `/internal/v1/*` no se publican en el Gateway (404) y exigen el token interno; comparado con `crypto.timingSafeEqual`. |
+| **Contenedor** | La imagen corre con el usuario `node` (no `root`), instala solo dependencias de producción y no copia `.env`. Solo el Gateway publica puerto; los servicios y la base quedan en la red interna de Docker. |
+| **Dependencias** | `npm audit` reportaba 4 vulnerabilidades altas en producción. Se corrigieron 3 con `npm audit fix` sin cambios incompatibles (`body-parser`, `follow-redirects`, `http-proxy-middleware`). Queda 1, de `zod`; ver limitación L-04. |
+| **Inyección SQL** | Todas las consultas usan parámetros (`$1, $2…`). Los únicos valores concatenados (`LIMIT`/`OFFSET`) son números ya validados por Zod. |
+
+## 3. Limitaciones conocidas (riesgo aceptado y documentado)
+
+| # | Limitación | Por qué se acepta / mitigación |
+|---|---|---|
+| L-01 | **Los tokens JWT no se pueden revocar.** Si un administrador bloquea una cuenta o cambia un rol, el token que esa persona ya tenía sigue valiendo hasta que expira (máx. 1 h). | Es la naturaleza de un JWT sin estado. Mitigación: la vigencia es de 1 h (`JWT_EXPIRA_SEGUNDOS`); Reservas consulta el estado real del usuario en cada reserva, así que una cuenta bloqueada no puede reservar aunque conserve el token; el login ya no entrega tokens nuevos (D-02). Mejora futura: lista de tokens revocados o *refresh tokens* de vida corta. |
+| L-02 | El **límite de peticiones** está en la memoria del Gateway. | Con una sola instancia del Gateway (el diseño actual) funciona. Con varias instancias habría que mover el contador a Redis. |
+| L-03 | El registro responde 409 `CORREO_REPETIDO`, lo que permite saber si un correo ya está registrado. | Es necesario para que el usuario sepa qué corregir. Está protegido por el límite de peticiones. |
+| L-04 | `zod` 3.x tiene un aviso de gravedad alta (memoria al validar colecciones muy grandes). | **No es alcanzable en PrestaLab:** ningún esquema usa `z.array`, `z.set` ni `z.record`, y el cuerpo se limita a 100 KB. Corregirlo exige pasar a Zod 4, que cambia la API de errores usada en todos los controladores; se deja como mejora futura para no desestabilizar el sistema a una semana de la entrega final. |
+| L-05 | Los **datos de prueba** usan una contraseña conocida (`Prestalab123`). | Solo para demostración. En un despliegue real se arranca con `DATOS_PRUEBA=off` (ver [`docs/despliegue.md`](../../docs/despliegue.md)). |
+| L-06 | HTTPS no lo termina el proyecto. | El Gateway envía `Strict-Transport-Security` y debe ir detrás de un proxy inverso con TLS (Nginx, Caddy, el balanceador de la nube). Documentado en el despliegue. |

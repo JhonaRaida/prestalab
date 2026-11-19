@@ -1,0 +1,197 @@
+RESULTADO DE LAS PRUEBAS AUTOMÁTICAS (npm test)
+Suites: 3 de 3 aprobadas · Pruebas: 146 de 146 aprobadas · Fallidas: 0
+
+== seguridad.test.js (89 pruebas)
+
+  Checklist: contraseñas y datos sensibles
+    [OK]   ninguna contraseña está en texto plano en la base de datos (todas son hash bcrypt)
+    [OK]   un usuario recién registrado también se guarda con hash, y la API nunca lo devuelve
+    [OK]   dos usuarios con la misma contraseña no comparten hash (sal aleatoria)
+
+  Checklist: secretos y configuración
+    [OK]   el archivo .env no está versionado y está en .gitignore
+    [OK]   .env.example solo trae valores de ejemplo para los secretos
+    [OK]   el código fuente no contiene claves privadas ni secretos escritos a mano
+    [OK]   en producción el sistema se niega a arrancar con secretos de ejemplo, vacíos o cortos
+
+  Checklist: los endpoints protegidos verifican autenticación
+    [OK]   el contrato documenta solo 2 operaciones públicas
+    [OK]   GET /usuarios sin token -> 401
+    [OK]   GET /usuarios/{usuarioId} sin token -> 401
+    [OK]   PATCH /usuarios/{usuarioId} sin token -> 401
+    [OK]   GET /usuarios/{usuarioId}/sanciones sin token -> 401
+    [OK]   GET /laboratorios sin token -> 401
+    [OK]   POST /laboratorios sin token -> 401
+    [OK]   GET /laboratorios/{laboratorioId} sin token -> 401
+    [OK]   PUT /laboratorios/{laboratorioId} sin token -> 401
+    [OK]   GET /categorias sin token -> 401
+    [OK]   POST /categorias sin token -> 401
+    [OK]   GET /recursos sin token -> 401
+    [OK]   POST /recursos sin token -> 401
+    [OK]   GET /recursos/{recursoId} sin token -> 401
+    [OK]   PUT /recursos/{recursoId} sin token -> 401
+    [OK]   PATCH /recursos/{recursoId} sin token -> 401
+    [OK]   DELETE /recursos/{recursoId} sin token -> 401
+    [OK]   GET /disponibilidad sin token -> 401
+    [OK]   POST /reservas sin token -> 401
+    [OK]   GET /reservas sin token -> 401
+    [OK]   GET /reservas/{reservaId} sin token -> 401
+    [OK]   PATCH /reservas/{reservaId} sin token -> 401
+    [OK]   POST /prestamos sin token -> 401
+    [OK]   GET /prestamos/{prestamoId} sin token -> 401
+    [OK]   PATCH /prestamos/{prestamoId} sin token -> 401
+    [OK]   POST /incidencias sin token -> 401
+    [OK]   GET /incidencias sin token -> 401
+    [OK]   GET /notificaciones sin token -> 401
+    [OK]   PATCH /notificaciones/{notificacionId} sin token -> 401
+    [OK]   GET /reportes/uso sin token -> 401
+    [OK]   GET /reportes/ocupacion sin token -> 401
+    [OK]   GET /reportes/retrasos sin token -> 401
+
+  Checklist: los endpoints protegidos verifican autenticación > tokens manipulados
+    [OK]   algoritmo "none" -> 401
+    [OK]   firmado con otro secreto -> 401
+    [OK]   expirado -> 401
+    [OK]   sin el esquema Bearer -> 401
+    [OK]   basura -> 401
+
+  Checklist: los endpoints sensibles verifican autorización (403)
+    [OK]   alumno: get /usuarios -> 403
+    [OK]   alumno: post /laboratorios -> 403
+    [OK]   alumno: put /laboratorios/1 -> 403
+    [OK]   alumno: post /categorias -> 403
+    [OK]   alumno: post /recursos -> 403
+    [OK]   alumno: put /recursos/1 -> 403
+    [OK]   alumno: patch /recursos/1 -> 403
+    [OK]   alumno: delete /recursos/1 -> 403
+    [OK]   alumno: post /prestamos -> 403
+    [OK]   alumno: patch /prestamos/1 -> 403
+    [OK]   alumno: post /incidencias -> 403
+    [OK]   alumno: get /incidencias -> 403
+    [OK]   alumno: get /reportes/uso -> 403
+    [OK]   alumno: get /reportes/ocupacion -> 403
+    [OK]   alumno: get /reportes/retrasos -> 403
+    [OK]   un encargado no puede administrar usuarios ni laboratorios
+    [OK]   un alumno no ve ni modifica los datos de otro usuario
+    [OK]   un usuario no puede subirse el rol ni desbloquearse a sí mismo
+
+  Checklist: las entradas se validan (D-01)
+    [OK]   /recursos/ con un id fuera del rango INTEGER -> 400 (antes 500)
+    [OK]   /usuarios/ con un id fuera del rango INTEGER -> 400 (antes 500)
+    [OK]   /reservas/ con un id fuera del rango INTEGER -> 400 (antes 500)
+    [OK]   /prestamos/ con un id fuera del rango INTEGER -> 400 (antes 500)
+    [OK]   /laboratorios/ con un id fuera del rango INTEGER -> 400 (antes 500)
+    [OK]   el id máximo válido (2147483647) responde 404, no 500
+    [OK]   /recursos?page desmedida o limit inválido -> 400 (antes 500)
+    [OK]   /usuarios?page desmedida o limit inválido -> 400 (antes 500)
+    [OK]   /reservas?page desmedida o limit inválido -> 400 (antes 500)
+    [OK]   /notificaciones?page desmedida o limit inválido -> 400 (antes 500)
+    [OK]   /incidencias?page desmedida o limit inválido -> 400 (antes 500)
+    [OK]   filtros con id fuera de rango también se rechazan
+    [OK]   cuerpos con tipos incorrectos o campos extra -> 400 (no hay asignación masiva)
+    [OK]   cuerpo mayor a 100 KB -> 400 sin tumbar el servicio
+    [OK]   intentos de inyección SQL se tratan como texto (consultas parametrizadas)
+
+  Checklist: los errores no revelan información interna
+    [OK]   ninguna respuesta de error (400, 401, 403, 404, 409, 422) filtra detalles técnicos
+    [OK]   las respuestas no anuncian la tecnología del servidor
+
+  Checklist: CORS acorde al proyecto (D-03)
+    [OK]   por defecto ningún origen externo recibe permiso CORS
+    [OK]   el preflight de un origen que no está en la lista no recibe ningún permiso (el navegador lo bloquea)
+    [OK]   un origen de la lista blanca (CORS_ORIGINS) recibe el permiso, solo él
+    [OK]   nunca se refleja "*" ni se permite un origen "null"
+
+  Cuentas bloqueadas (D-02)
+    [OK]   una cuenta bloqueada no puede iniciar sesión: 403 CUENTA_BLOQUEADA
+    [OK]   con contraseña incorrecta sigue siendo 401: no se revela el estado de la cuenta
+    [OK]   al desbloquearla, la cuenta vuelve a iniciar sesión
+
+  Concurrencia
+    [OK]   30 inicios de sesión simultáneos se atienden todos, cada uno con su token
+    [OK]   30 registros simultáneos con el mismo correo: solo uno se crea, el resto 409 (no hay 500)
+    [OK]   200 lecturas simultáneas de GET /recursos responden 200
+
+== e2e.test.js (49 pruebas)
+
+  RF-01 registro e inicio de sesión
+    [OK]   registra un alumno y nunca devuelve la contraseña
+    [OK]   correo repetido -> 409 CORREO_REPETIDO
+    [OK]   no se puede auto-registrar como administrador
+    [OK]   validación: campos faltantes y contraseña corta -> 400 con detalles
+    [OK]   inicio de sesión correcto entrega JWT con expiración
+    [OK]   credenciales incorrectas -> 401 sin revelar si falló el correo o la contraseña
+    [OK]   JSON roto -> 400 JSON_INVALIDO
+
+  Gateway y seguridad (RNF)
+    [OK]   sin token -> 401 TOKEN_INVALIDO con formato de error completo
+    [OK]   token alterado -> 401
+    [OK]   el cliente no puede falsificar su identidad con encabezados X-User-*
+    [OK]   las rutas internas no se publican en el Gateway
+    [OK]   ruta inexistente -> 404 con formato de error
+    [OK]   un servicio no responde sin el token interno
+    [OK]   límite de peticiones en el inicio de sesión -> 429
+    [OK]   el health del Gateway reporta el estado de los servicios
+
+  RF-02 usuarios y roles
+    [OK]   solo el administrador lista usuarios; con paginación
+    [OK]   limit mayor a 100 -> 400
+    [OK]   un usuario consulta el suyo pero no el de otro
+    [OK]   el administrador cambia rol y estado; un alumno no puede subirse el rol
+
+  RF-03 inventario (CRUD completo)
+    [OK]   laboratorios: crear, listar, consultar y reemplazar (solo administrador)
+    [OK]   categorías: crear y filtrar por tipo
+    [OK]   recursos: crear, código repetido, consultar, reemplazar, estado y baja lógica
+    [OK]   el encargado solo administra su laboratorio; los alumnos no administran
+    [OK]   filtros y búsqueda de recursos
+
+  RF-04 disponibilidad y RF-05 reservas
+    [OK]   disponibilidad excluye lo ocupado y lo que no está activo
+    [OK]   crear reserva -> 201, Location y notificación de confirmación
+    [OK]   validaciones: sin campos, fin antes de inicio, fecha pasada, recurso inexistente
+    [OK]   traslape -> 409 RESERVA_TRASLAPADA, pero un horario contiguo sí se permite
+    [OK]   concurrencia: 8 peticiones simultáneas al mismo horario -> exactamente una reserva
+    [OK]   límite de reservas por rol (alumno 2) -> 422 LIMITE_RESERVAS_EXCEDIDO
+    [OK]   recurso en mantenimiento -> 422 RECURSO_NO_RESERVABLE
+    [OK]   usuario bloqueado -> 422 USUARIO_SANCIONADO
+    [OK]   roles: el administrador no reserva; el encargado reserva en mostrador solo en su laboratorio
+    [OK]   consultar, listar con filtros y control de acceso
+    [OK]   modificar horario y cancelar; reglas de plazo y estado
+    [OK]   modificar a un horario ocupado -> 409
+
+  RF-06 entrega y devolución, RF-07 incidencias y sanción
+    [OK]   flujo correcto: reservar -> entregar -> devolver sin efectos
+    [OK]   entregar con reserva lejana o inexistente
+    [OK]   devolución dañada: incidencia, recurso a mantenimiento y ya no se puede reservar
+    [OK]   devolución incompleta genera incidencia de faltante sin mantenimiento
+    [OK]   devolución tardía: incidencia de retraso, sanción automática, bloqueo y notificación
+    [OK]   incidencia manual del encargado
+    [OK]   tarea programada: cancela las reservas no presentadas y envía recordatorios
+
+  RF-10 reportes
+    [OK]   uso, ocupación y retrasos con datos reales
+    [OK]   el encargado solo ve su laboratorio y no puede pedir otro
+    [OK]   validaciones y permisos
+
+  RNF tolerancia a fallos
+    [OK]   si Notificaciones cae, las reservas siguen funcionando (dependencia no bloqueante)
+    [OK]   si Inventario cae: crear reserva y disponibilidad responden 503; el resto del sistema sigue
+    [OK]   si Inventario cae durante una devolución dañada, se revierte todo (503) y se puede reintentar
+
+== unit.test.js (8 pruebas)
+
+  validación
+    [OK]   acepta datos válidos
+    [OK]   rechaza datos inválidos con detalles por campo
+    [OK]   idRuta solo acepta enteros positivos
+    [OK]   fechaIso exige zona horaria
+
+  JWT
+    [OK]   firma y verifica identidad y rol
+    [OK]   un token alterado se rechaza
+
+  formato de error
+    [OK]   error de aplicación
+    [OK]   un error inesperado no revela detalles internos
+

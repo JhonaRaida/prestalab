@@ -1,0 +1,26 @@
+
+> prestalab@1.0.0 contrato
+> node scripts/validar-contrato.js
+
+  ✓ POST /sesiones cumple Sesion
+  ✓ POST /usuarios cumple Usuario
+  ✓ GET /usuarios cumple Meta
+  ✓ GET /usuarios/{id} cumple Usuario
+  ✓ GET /laboratorios (1) cumple Laboratorio
+  ✓ GET /categorias (1) cumple Categoria
+  ✓ POST /recursos cumple Recurso
+  ✓ GET /disponibilidad (1) cumple RecursoDisponible
+  ✓ POST /reservas cumple Reserva
+  ✓ POST /prestamos cumple Prestamo
+  ✓ PATCH /prestamos (devolución) cumple Prestamo
+  ✓ POST /incidencias cumple Incidencia
+  ✓ GET /incidencias (1) cumple Incidencia
+  ✓ GET /notificaciones (1) cumple Notificacion
+  ✓ GET /reportes/uso cumple ReporteUso
+  ✓ GET /reportes/ocupacion cumple ReporteOcupacion
+  ✓ GET /reportes/retrasos cumple ReporteRetrasos
+  ✓ error 401 cumple Error
+  ✓ error 400 cumple Error
+  ✓ error 409 cumple Error
+
+20/20 respuestas cumplen el contrato

@@ -1,0 +1,12 @@
+Prueba de humo contra http://localhost:8080
+  ✓ GET /health: Gateway y los 5 servicios en "ok" — usuarios, inventario, reservas, notificaciones, reportes
+  ✓ GET /docs: documentación Swagger disponible
+  ✓ Ruta protegida sin token -> 401
+  ✓ Inicio de sesión -> 201 con token
+  ✓ Consulta autenticada GET /recursos -> 200 — 63 recursos
+  ✓ Entrada inválida -> 400 (no 500)
+  ✓ Las rutas internas no están publicadas -> 404
+  ✓ Cabeceras de seguridad y sin X-Powered-By
+  ✓ Sin CORS abierto a cualquier origen
+
+Todo en orden: 9 de 9 pasos correctos.

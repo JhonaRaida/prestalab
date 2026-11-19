@@ -1,0 +1,520 @@
+PrestaLab API (Entrega 5-8)
+
+❏ 1. Autenticación
+↳ Iniciar sesión (alumno)
+  POST http://localhost:8080/api/v1/sesiones [201 Created, 983B, 105ms]
+  ✓  Código 201
+  ✓  Trae token Bearer
+
+↳ Iniciar sesión (docente)
+  POST http://localhost:8080/api/v1/sesiones [201 Created, 986B, 87ms]
+  ✓  Código 201
+  ✓  Trae token Bearer
+
+↳ Iniciar sesión (encargado)
+  POST http://localhost:8080/api/v1/sesiones [201 Created, 1kB, 86ms]
+  ✓  Código 201
+  ✓  Trae token Bearer
+
+↳ Iniciar sesión (encargado2)
+  POST http://localhost:8080/api/v1/sesiones [201 Created, 1.01kB, 89ms]
+  ✓  Código 201
+  ✓  Trae token Bearer
+
+↳ Iniciar sesión (admin)
+  POST http://localhost:8080/api/v1/sesiones [201 Created, 1kB, 90ms]
+  ✓  Código 201
+  ✓  Trae token Bearer
+
+↳ Registrar usuario nuevo (RF-01)
+  POST http://localhost:8080/api/v1/usuarios [201 Created, 918B, 87ms]
+  ✓  Código 201
+  ✓  Rol alumno y sin contraseña
+
+↳ Iniciar sesión (usuario nuevo)
+  POST http://localhost:8080/api/v1/sesiones [201 Created, 994B, 85ms]
+  ✓  Código 201
+
+❏ 2. Usuarios
+↳ Listar usuarios (administrador)
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/usuarios?page=1&limit=5 [200 OK, 1.58kB, 6ms]
+  ✓  Código 200
+  ✓  Paginado
+
+↳ Listar usuarios como alumno → 403
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/usuarios [403 Forbidden, 901B, 6ms]
+  ✓  Código 403
+  ✓  Error PERMISO_INSUFICIENTE
+
+↳ Consultar mi usuario
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/usuarios/260 [200 OK, 881B, 5ms]
+  ✓  Código 200
+
+↳ Consultar usuario de otra persona → 403
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/usuarios/1 [403 Forbidden, 900B, 3ms]
+  ✓  Código 403
+
+↳ Cambiar mi nombre
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/usuarios/260 [200 OK, 882B, 5ms]
+  ✓  Código 200
+  ✓  Nombre cambiado
+
+↳ Alumno intenta subirse el rol → 403
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/usuarios/260 [403 Forbidden, 917B, 5ms]
+  ✓  Código 403
+
+↳ Administrador cambia estado del usuario
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/usuarios/260 [200 OK, 882B, 6ms]
+  ✓  Código 200
+
+↳ Consultar sanciones propias
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/usuarios/260/sanciones [200 OK, 755B, 11ms]
+  ✓  Código 200
+
+❏ 3. Inventario
+↳ Listar laboratorios
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/laboratorios [200 OK, 1.25kB, 12ms]
+  ✓  Código 200
+  ✓  Hay laboratorios
+
+↳ Crear laboratorio (administrador)
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/laboratorios [201 Created, 814B, 6ms]
+  ✓  Código 201
+
+↳ Reemplazar laboratorio (PUT)
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PUT http://localhost:8080/api/v1/laboratorios/9 [200 OK, 777B, 5ms]
+  ✓  Código 200
+
+↳ Crear categoría
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/categorias [201 Created, 804B, 5ms]
+  ✓  Código 201
+
+↳ Listar categorías de espacios
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/categorias?tipo=espacio [200 OK, 981B, 4ms]
+  ✓  Código 200
+
+↳ Crear recurso (encargado)
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/recursos [201 Created, 952B, 7ms]
+  ✓  Código 201
+
+↳ Crear recurso con código repetido → 409
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/recursos [409 Conflict, 914B, 9ms]
+  ✓  Código 409
+  ✓  Error CODIGO_INVENTARIO_REPETIDO
+
+↳ Crear recurso en laboratorio ajeno → 403
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/recursos [403 Forbidden, 909B, 8ms]
+  ✓  Código 403
+
+↳ Crear recurso sin campos → 400
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/recursos [400 Bad Request, 1.08kB, 6ms]
+  ✓  Código 400
+  ✓  Error VALIDACION_FALLIDA
+  ✓  Detalla los campos
+
+↳ Consultar recurso
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/recursos/67 [200 OK, 916B, 5ms]
+  ✓  Código 200
+
+↳ Listar y filtrar recursos
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/recursos?laboratorioId=1&tipo=equipo&estado=activo&page=1&limit=10 [200 OK, 2.46kB, 5ms]
+  ✓  Código 200
+
+↳ Reemplazar recurso (PUT)
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PUT http://localhost:8080/api/v1/recursos/67 [200 OK, 890B, 7ms]
+  ✓  Código 200
+
+↳ Recurso inexistente → 404
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/recursos/999999 [404 Not Found, 879B, 4ms]
+  ✓  Código 404
+  ✓  Error NO_ENCONTRADO
+
+↳ Recurso con id fuera de rango → 400
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/recursos/99999999999999999999 [400 Bad Request, 991B, 6ms]
+  ✓  Código 400
+  ✓  Error VALIDACION_FALLIDA
+
+❏ 4. Reservas
+↳ Consultar disponibilidad
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/disponibilidad?inicio=2026-11-22T00:00:00.000Z&fin=2026-11-22T01:00:00.000Z&laboratorioId=1&limit=100 [200 OK, 7.32kB, 28ms]
+  ✓  Código 200
+  ✓  El recurso nuevo aparece libre
+
+↳ Crear reserva
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/reservas [201 Created, 911B, 14ms]
+  ✓  Código 201
+  ✓  Confirmada
+  ✓  Location
+
+↳ Reservar el mismo horario → 409 traslape
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/reservas [409 Conflict, 900B, 10ms]
+  ✓  Código 409
+  ✓  Error RESERVA_TRASLAPADA
+
+↳ Reservar sin el campo fin → 400
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/reservas [400 Bad Request, 950B, 8ms]
+  ✓  Código 400
+
+↳ Reservar con fecha pasada → 400
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/reservas [400 Bad Request, 964B, 4ms]
+  ✓  Código 400
+
+↳ Consultar mi reserva
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/reservas/78 [200 OK, 875B, 5ms]
+  ✓  Código 200
+
+↳ Otro alumno no ve mi reserva → 403
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/reservas/78 [403 Forbidden, 893B, 4ms]
+  ✓  Código 403
+
+↳ Historial con filtros
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/reservas?estado=confirmada&page=1&limit=10 [200 OK, 925B, 5ms]
+  ✓  Código 200
+  ✓  Solo mis reservas
+
+↳ Modificar horario
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/reservas/78 [200 OK, 875B, 6ms]
+  ✓  Código 200
+
+↳ Cancelar reserva
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/reservas/78 [200 OK, 874B, 6ms]
+  ✓  Código 200
+  ✓  Cancelada
+
+↳ Cancelar de nuevo → 409
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/reservas/78 [409 Conflict, 906B, 6ms]
+  ✓  Código 409
+  ✓  Error ESTADO_INCOMPATIBLE
+
+❏ 5. Préstamos e incidencias
+↳ Reservar para dentro de 5 minutos
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/reservas [201 Created, 911B, 11ms]
+  ✓  Código 201
+
+↳ Alumno intenta registrar entrega → 403
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/prestamos [403 Forbidden, 902B, 5ms]
+  ✓  Código 403
+
+↳ Registrar entrega (encargado)
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/prestamos [201 Created, 867B, 6ms]
+  ✓  Código 201
+
+↳ Consultar préstamo
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/prestamos/19 [200 OK, 830B, 6ms]
+  ✓  Código 200
+
+↳ Registrar incidencia manual
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/incidencias [201 Created, 891B, 7ms]
+  ✓  Código 201
+
+↳ Registrar devolución dañada
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/prestamos/19 [200 OK, 1kB, 10ms]
+  ✓  Código 200
+  ✓  Recurso a mantenimiento y con incidencia
+
+↳ Devolver de nuevo → 409
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/prestamos/19 [409 Conflict, 891B, 5ms]
+  ✓  Código 409
+
+↳ Reservar recurso en mantenimiento → 422
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  POST http://localhost:8080/api/v1/reservas [422 Unprocessable Entity, 940B, 11ms]
+  ✓  Código 422
+  ✓  Error RECURSO_NO_RESERVABLE
+
+↳ Listar incidencias
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/incidencias?recursoId=67 [200 OK, 1.05kB, 7ms]
+  ✓  Código 200
+  ✓  Dos incidencias
+
+↳ Reactivar el recurso
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/recursos/67 [200 OK, 890B, 7ms]
+  ✓  Código 200
+
+↳ Dar de baja el recurso (DELETE)
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  DELETE http://localhost:8080/api/v1/recursos/67 [204 No Content, 604B, 7ms]
+  ✓  Código 204
+
+❏ 6. Notificaciones
+↳ Mis notificaciones
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/notificaciones?leida=false [200 OK, 1.2kB, 7ms]
+  ✓  Código 200
+  ✓  Hay confirmaciones
+
+↳ Marcar como leída
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/notificaciones/62 [200 OK, 926B, 6ms]
+  ✓  Código 200
+  ✓  Leída
+
+↳ Marcar notificación ajena → 403
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  PATCH http://localhost:8080/api/v1/notificaciones/62 [403 Forbidden, 916B, 10ms]
+  ✓  Código 403
+
+❏ 7. Reportes
+↳ Reporte de uso
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/reportes/uso?desde=2020-01-01T00:00:00Z&hasta=2035-01-01T00:00:00Z [200 OK, 5.71kB, 20ms]
+  ✓  Código 200
+  ✓  Lista de recursos
+
+↳ Reporte de ocupación
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/reportes/ocupacion?desde=2020-01-01T00:00:00Z&hasta=2035-01-01T00:00:00Z [200 OK, 941B, 16ms]
+  ✓  Código 200
+
+↳ Reporte de retrasos e incidencias
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/reportes/retrasos?desde=2020-01-01T00:00:00Z&hasta=2035-01-01T00:00:00Z [200 OK, 1.03kB, 22ms]
+  ✓  Código 200
+
+↳ Reporte de otro laboratorio → 403
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/reportes/uso?desde=2020-01-01T00:00:00Z&hasta=2035-01-01T00:00:00Z&laboratorioId=1 [403 Forbidden, 911B, 14ms]
+  ✓  Código 403
+
+↳ Reporte sin fechas → 400
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/reportes/uso [400 Bad Request, 1kB, 3ms]
+  ✓  Código 400
+
+❏ 8. Errores transversales
+↳ Sin token → 401
+  GET http://localhost:8080/api/v1/recursos [401 Unauthorized, 924B, 2ms]
+  ✓  Código 401
+  ✓  Error TOKEN_INVALIDO
+  ✓  Formato de error completo
+
+↳ Credenciales incorrectas → 401
+  POST http://localhost:8080/api/v1/sesiones [401 Unauthorized, 896B, 86ms]
+  ✓  Código 401
+  ✓  Error CREDENCIALES_INVALIDAS
+
+↳ Ruta inexistente → 404
+  ┌
+  │ `Using "atob" is deprecated. Use "require('atob')" ins
+  │ tead.`
+  └
+  GET http://localhost:8080/api/v1/cosas [404 Not Found, 905B, 2ms]
+  ✓  Código 404
+
+┌─────────────────────────┬───────────────────┬──────────────────┐
+│                         │          executed │           failed │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              iterations │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│                requests │                62 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│            test-scripts │                62 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│      prerequest-scripts │                69 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              assertions │                93 │                0 │
+├─────────────────────────┴───────────────────┴──────────────────┤
+│ total run duration: 2.2s                                       │
+├────────────────────────────────────────────────────────────────┤
+│ total data received: 26.49kB (approx)                          │
+├────────────────────────────────────────────────────────────────┤
+│ average response time: 18ms [min: 2ms, max: 105ms, s.d.: 27ms] │
+└────────────────────────────────────────────────────────────────┘
