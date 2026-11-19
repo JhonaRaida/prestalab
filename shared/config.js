@@ -4,12 +4,17 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env'), quiet: true
 
 const e = process.env;
 const num = (v, def) => (v === undefined || v === '' ? def : Number(v));
+const lista = (v) => (v || '').split(',').map((x) => x.trim()).filter(Boolean);
 
-module.exports = {
+// Valores de relleno solo para desarrollo y pruebas. En producción NO se permiten (ver validarSecretos).
+const RELLENO_JWT = 'cambia-este-secreto-en-.env';
+const RELLENO_SERVICIO = 'cambia-este-token-interno';
+
+const config = {
   entorno: e.NODE_ENV || 'development',
-  jwtSecreto: e.JWT_SECRET || 'cambia-este-secreto-en-.env',
+  jwtSecreto: e.JWT_SECRET || RELLENO_JWT,
   jwtExpiraSegundos: num(e.JWT_EXPIRA_SEGUNDOS, 3600),
-  tokenServicio: e.SERVICE_TOKEN || 'cambia-este-token-interno',
+  tokenServicio: e.SERVICE_TOKEN || RELLENO_SERVICIO,
   bcryptRondas: num(e.BCRYPT_RONDAS, 10),
   puertos: {
     gateway: num(e.PORT_GATEWAY, 8080),
@@ -51,7 +56,29 @@ module.exports = {
     sesionesPorMinuto: num(e.LIMITE_SESIONES_MIN, 20),
     generalPorMinuto: num(e.LIMITE_GENERAL_MIN, 600),
   },
+  // CORS: lista de orígenes (separados por coma) que pueden usar la API desde un navegador.
+  // Vacía por defecto: el proyecto es solo backend y ningún sitio externo debe llamarlo desde el navegador.
+  corsOrigenes: lista(e.CORS_ORIGINS),
   timeoutLlamadasMs: num(e.TIMEOUT_LLAMADAS_MS, 3000),
   intervaloTareasMs: num(e.INTERVALO_TAREAS_MS, 60000),
   tareasActivas: e.TAREAS !== 'off',
 };
+
+// En producción el sistema se niega a arrancar con secretos de relleno, vacíos o cortos:
+// con un secreto conocido cualquiera podría fabricar tokens de administrador.
+function validarSecretos(c) {
+  if (c.entorno !== 'production') return;
+  const problemas = [];
+  for (const [nombre, valor] of [['JWT_SECRET', c.jwtSecreto], ['SERVICE_TOKEN', c.tokenServicio]]) {
+    if (typeof valor !== 'string' || /^cambia-este/i.test(valor) || valor.length < 16) {
+      problemas.push(`${nombre} no está configurado, es el valor de ejemplo o tiene menos de 16 caracteres`);
+    }
+  }
+  if (problemas.length) {
+    throw new Error(`Configuración insegura: ${problemas.join('; ')}. Edita el archivo .env (ver README, Paso 3).`);
+  }
+}
+validarSecretos(config);
+
+module.exports = config;
+module.exports.validarSecretos = validarSecretos;

@@ -13,6 +13,7 @@ const Errores = {
   tokenInvalido: () => new AppError(401, 'TOKEN_INVALIDO', 'Falta el token de acceso o no es válido.'),
   credenciales: () => new AppError(401, 'CREDENCIALES_INVALIDAS', 'Correo o contraseña incorrectos.'),
   permiso: (m = 'Tu rol no permite realizar esta operación.') => new AppError(403, 'PERMISO_INSUFICIENTE', m),
+  cuentaBloqueada: () => new AppError(403, 'CUENTA_BLOQUEADA', 'Tu cuenta está bloqueada. Contacta a un administrador.'),
   noEncontrado: (que = 'El recurso solicitado') => new AppError(404, 'NO_ENCONTRADO', `${que} no existe.`),
   conflicto: (codigo, mensaje) => new AppError(409, codigo, mensaje),
   regla: (codigo, mensaje) => new AppError(422, codigo, mensaje),

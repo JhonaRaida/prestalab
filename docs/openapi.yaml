@@ -62,6 +62,20 @@ paths:
           $ref: '#/components/responses/E400'
         '401':
           $ref: '#/components/responses/E401'
+        '403':
+          description: 'Cuenta bloqueada. Las credenciales son correctas, pero un administrador bloqueó la cuenta
+            (codigo: CUENTA_BLOQUEADA).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  codigo: CUENTA_BLOQUEADA
+                  mensaje: Tu cuenta está bloqueada. Contacta a un administrador.
+                  ruta: /api/v1/sesiones
+                  fecha: '2026-11-02T18:40:12-06:00'
+                  idPeticion: req-7f3a91c2
         '429':
           $ref: '#/components/responses/E429'
         '500':
@@ -2171,7 +2185,8 @@ components:
   responses:
     E400:
       description: 'Solicitud inválida. La petición está mal formada: JSON roto, campo obligatorio ausente, tipo
-        incorrecto o parámetro fuera de rango.'
+        incorrecto o parámetro fuera de rango (por ejemplo, un identificador mayor a 2147483647 o una página mayor
+        a 1000000).'
       content:
         application/json:
           schema:

@@ -22,6 +22,8 @@ async function iniciarSesion({ correo, contrasena }) {
   const u = await repo.porCorreoConHash(correo);
   const ok = await bcrypt.compare(contrasena, u ? u.hash : HASH_FALSO);
   if (!u || !ok) throw Errores.credenciales();
+  // Se revisa después de la contraseña para no revelar el estado de una cuenta a quien no la conoce.
+  if (u.estado === 'bloqueado') throw Errores.cuentaBloqueada();
   return {
     tokenAcceso: firmar(u), tipo: 'Bearer', expiraEn: config.jwtExpiraSegundos,
     usuario: { id: u.id, nombre: u.nombre, rol: u.rol },

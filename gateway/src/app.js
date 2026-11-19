@@ -3,6 +3,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const helmet = require('helmet');
+const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const YAML = require('yaml');
@@ -19,6 +20,16 @@ function crearGateway() {
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
   app.use(helmet({ contentSecurityPolicy: false }));
+
+  // CORS con lista blanca (CORS_ORIGINS). Sin lista, no se envía ningún encabezado CORS y el navegador
+  // bloquea las llamadas desde otros sitios. Va antes de la autenticación porque el preflight (OPTIONS) no lleva token.
+  app.use(cors({
+    origin: (origen, cb) => cb(null, config.corsOrigenes.includes(origen)),
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
+    exposedHeaders: ['x-request-id', 'Location', 'RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset'],
+    maxAge: 600,
+  }));
 
   // idPeticion único por petición
   app.use((req, res, next) => {
