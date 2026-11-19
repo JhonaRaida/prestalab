@@ -144,7 +144,7 @@ La colección son todas las peticiones del proyecto ya preparadas. Está en la c
 
 **No hace falta iniciar sesión antes.** Cada petición usa la cuenta que le corresponde (alumno, encargado, administrador…) y, si todavía no hay sesión o ya venció (dura 1 hora), la colección inicia sesión sola.
 
-Para correr las 61 peticiones de una vez: clic derecho en la colección → **Run collection** → **Run**.
+Para correr las 62 peticiones de una vez: clic derecho en la colección → **Run collection** → **Run**.
 
 > Si aparece una barra morada con sugerencias de la IA de Postman (**Fix**, **Diagnose**), haz clic en **Decline**: si se acepta, Postman modifica la petición.
 

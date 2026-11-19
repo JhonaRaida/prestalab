@@ -1272,6 +1272,40 @@
               ]
             }
           }
+        },
+        {
+          "name": "Recurso con id fuera de rango → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error VALIDACION_FALLIDA', () => pm.expect(pm.response.json().error.codigo).to.eql('VALIDACION_FALLIDA'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_alumno}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/recursos/99999999999999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "recursos",
+                "99999999999999999999"
+              ]
+            }
+          }
         }
       ]
     },

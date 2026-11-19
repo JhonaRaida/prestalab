@@ -89,6 +89,7 @@ req('Consultar recurso', 'GET', '/recursos/{{recursoId}}', { token: 'token_alumn
 req('Listar y filtrar recursos', 'GET', '/recursos', { token: 'token_alumno', query: { laboratorioId: 1, tipo: 'equipo', estado: 'activo', page: 1, limit: 10 }, tests: [status(200)] });
 req('Reemplazar recurso (PUT)', 'PUT', '/recursos/{{recursoId}}', { token: 'token_encargado', body: { nombre: 'Laptop renombrada', codigoInventario: 'PM-{{sufijo}}', categoriaId: 1, laboratorioId: 1, descripcion: 'Editada' }, tests: [status(200)] });
 req('Recurso inexistente → 404', 'GET', '/recursos/999999', { token: 'token_alumno', tests: [status(404), codigo('NO_ENCONTRADO')] });
+req('Recurso con id fuera de rango → 400', 'GET', '/recursos/99999999999999999999', { token: 'token_alumno', tests: [status(400), codigo('VALIDACION_FALLIDA')] });
 
 folder('4. Reservas', 'RF-04, RF-05, RF-09: disponibilidad y reservas con reglas de negocio');
 req('Consultar disponibilidad', 'GET', '/disponibilidad', {
