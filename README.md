@@ -70,7 +70,7 @@ cp .env.example .env
 - **Windows:** `notepad .env` (se abre en el Bloc de notas).
 - **Mac / Linux:** con cualquier editor de texto, por ejemplo `nano .env`.
 
-Cambia el valor de `JWT_SECRET` y de `SERVICE_TOKEN` por cualquier texto largo, por ejemplo `miClaveSuperLarga123abc456def`. Son las claves con las que el sistema firma los inicios de sesión. Guarda el archivo y ciérralo.
+Cambia el valor de `JWT_SECRET` y de `SERVICE_TOKEN` por cualquier texto largo (mínimo 16 caracteres), por ejemplo `miClaveSuperLarga123abc456def`. Son las claves con las que el sistema firma los inicios de sesión. **Con Docker es obligatorio:** si siguen siendo los valores de ejemplo, el sistema se niega a arrancar y lo avisa. Guarda el archivo y ciérralo.
 
 El archivo `.env` se queda solo en tu computadora.
 
@@ -238,6 +238,21 @@ npm start                # arranca el Gateway y los 5 servicios
 
 Pruebas automáticas: `npm test` (necesitan PostgreSQL y las bases creadas, pero no que el sistema esté corriendo).
 
+## Calidad y seguridad
+
+| Qué | Comando | Qué comprueba |
+|---|---|---|
+| Pruebas automáticas | `npm test` | 146 pruebas: funcionalidad, errores, permisos, seguridad y concurrencia, con cobertura (99 % de líneas). No necesitan el sistema corriendo. |
+| Contrato de la API | `npm run contrato` | Que las respuestas reales cumplan `docs/openapi.yaml`. |
+| Prueba de humo | `npm run humo` | 9 comprobaciones de solo lectura sobre el sistema ya corriendo (salud, 401, sesión, 400, rutas internas, cabeceras, CORS). Úsala después de desplegar. |
+| Prueba de carga | `LIMITE_GENERAL_MIN=1000000 npm start` y, en otra terminal, `npm run carga` | 50 usuarios concurrentes; reporta p50/p95/p99. Con `RUTA='/reservas?limit=20'` se mide otro endpoint. |
+
+El plan de pruebas con resultados está en [`entregas/entrega-7/plan-de-pruebas.md`](entregas/entrega-7/plan-de-pruebas.md) y el checklist de seguridad en [`entregas/entrega-7/checklist-seguridad.md`](entregas/entrega-7/checklist-seguridad.md).
+
+## Despliegue en un servidor
+
+Con Docker: `cp .env.example .env`, editar `JWT_SECRET` y `SERVICE_TOKEN`, y `docker compose up --build -d`. Sin Docker, con HTTPS, respaldo de la base de datos y reversión: [`docs/despliegue.md`](docs/despliegue.md). Para un despliegue real conviene `DATOS_PRUEBA=off` y fijar `CORS_ORIGINS` solo si un sitio web va a usar la API.
+
 ## Problemas comunes
 
 | Mensaje | Qué hacer |
@@ -250,7 +265,10 @@ Pruebas automáticas: `npm test` (necesitan PostgreSQL y las bases creadas, pero
 | `database "prestalab" does not exist` | No es una falla: es la revisión automática de Docker. Se puede ignorar. |
 | Puerto 8080 ocupado | Cambia `PORT_GATEWAY` en `.env` o cierra el programa que lo usa. |
 | Cambié `DB_USER`/`DB_PASSWORD` y Docker sigue fallando | El volumen conserva la configuración vieja: `docker compose down -v` y vuelve a levantar. |
-| Postman: las peticiones no abren o desaparecieron los `.json` | Se abrió la carpeta como carpeta local. Recupera los archivos con `git restore postman/` e impórtalos con **File → Import → files**. || 401 `TOKEN_INVALIDO` | El token dura 1 hora. La colección de Postman inicia sesión sola; en Swagger, vuelve a iniciar sesión. |
+| Postman: las peticiones no abren o desaparecieron los `.json` | Se abrió la carpeta como carpeta local. Recupera los archivos con `git restore postman/` e impórtalos con **File → Import → files**. |
+| 401 `TOKEN_INVALIDO` | El token dura 1 hora. La colección de Postman inicia sesión sola; en Swagger, vuelve a iniciar sesión. |
+| 403 `CUENTA_BLOQUEADA` al iniciar sesión | Un administrador bloqueó la cuenta: puede desbloquearla con `PATCH /usuarios/{id}` y `{"estado":"activo"}`. |
+| El sistema termina con «Configuración insegura» | `JWT_SECRET` o `SERVICE_TOKEN` siguen siendo los de ejemplo (o miden menos de 16 caracteres). Edita `.env` (Paso 3). |
 | 429 `DEMASIADAS_PETICIONES` | Es el límite del Gateway (a propósito). Espera un minuto. |
 
 ## Más información
@@ -259,5 +277,6 @@ Pruebas automáticas: `npm test` (necesitan PostgreSQL y las bases creadas, pero
 |---|---|
 | [`docs/arquitectura.md`](docs/arquitectura.md) | Servicios, estructura del código, decisiones de diseño, limitaciones y pruebas avanzadas |
 | [`docs/cambios.md`](docs/cambios.md) | Cambios respecto al diseño de entregas anteriores |
+| [`docs/despliegue.md`](docs/despliegue.md) | Despliegue con y sin Docker, HTTPS, respaldo y reversión |
 | [`docs/openapi.yaml`](docs/openapi.yaml) | Contrato de la API (también en <http://localhost:8080/docs>) |
 | [`entregas/`](entregas/) | Documentos, reportes y evidencias de cada entrega |

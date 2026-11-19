@@ -2,6 +2,24 @@
 
 Registro de lo que cambió en cada entrega respecto a lo diseñado antes.
 
+## Entrega 7 — Pruebas, seguridad, documentación y despliegue
+
+**La arquitectura y el modelo de datos no cambiaron.** Los cambios son correcciones de defectos hallados al revisar la API (detalle en [`entregas/entrega-7/defectos.md`](../entregas/entrega-7/defectos.md)):
+
+1. **D-01 · Ids y páginas fuera de rango → 400.** Los identificadores se aceptan hasta 2 147 483 647 (el máximo de `INTEGER` en PostgreSQL) y `page` hasta 1 000 000. Antes, valores mayores provocaban un 500. Contrato: se amplió la descripción de la respuesta 400.
+2. **D-02 · Cuenta bloqueada no inicia sesión.** `POST /sesiones` responde **403 `CUENTA_BLOQUEADA`** cuando la contraseña es correcta pero la cuenta está bloqueada (con contraseña incorrecta sigue siendo 401). Contrato: nueva respuesta 403 en `POST /sesiones`.
+3. **D-03 · CORS.** Nueva variable `CORS_ORIGINS` (lista blanca, vacía por defecto). Sin ella, ningún sitio externo puede usar la API desde un navegador.
+4. **D-04 · Secretos obligatorios en producción.** Con `NODE_ENV=production` (el `Dockerfile` ya lo fija) el sistema no arranca si `JWT_SECRET` o `SERVICE_TOKEN` faltan, son los de ejemplo o miden menos de 16 caracteres. **Quien use Docker debe editar `.env`** (el README ya lo pedía).
+5. **D-05 · Dependencias.** `npm audit fix` actualizó `body-parser`, `http-proxy-middleware` y `follow-redirects`; nueva dependencia `cors`.
+
+Cambios en pruebas y herramientas:
+
+6. **`test/seguridad.test.js`:** 89 pruebas nuevas (146 en total, 99 % de líneas). Genera una prueba de «sin token → 401» por cada operación protegida de `docs/openapi.yaml`.
+7. **`npm run humo`** (`scripts/humo.js`): prueba de humo de solo lectura para después de desplegar.
+8. **`npm run carga`** acepta `RUTA`, `CORREO` y `SALIDA` para medir cualquier `GET` y guardar el resultado.
+9. **Colección de Postman:** 62 peticiones (se agregó «Recurso con id fuera de rango → 400»).
+10. **Documentación nueva:** [`docs/despliegue.md`](despliegue.md) y los entregables de [`entregas/entrega-7/`](../entregas/entrega-7/).
+
 ## Entrega 5 — MVP Backend I
 
 **La arquitectura no cambió:** se mantienen el Gateway, los 5 servicios, las 4 bases de datos y el modelo de la Entrega 4.

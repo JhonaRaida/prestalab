@@ -50,8 +50,8 @@ prestalab/
 │   └── instalar.sql · reiniciar.sql · verificar.sql   instalación manual con psql, borrado y consultas de verificación
 ├── docs/                   este documento, cambios, contrato OpenAPI, modelo y diagramas de datos
 ├── postman/                colección y entorno de Postman
-├── scripts/                crear-bases, iniciar-todo, carga, validar-contrato, generar-postman, extraer-modelo, generar-er
-├── test/                   unit.test.js y e2e.test.js
+├── scripts/                crear-bases, iniciar-todo, carga, humo, validar-contrato, generar-postman, extraer-modelo, generar-er
+├── test/                   unit.test.js, e2e.test.js y seguridad.test.js
 ├── entregas/               documentos, reportes y evidencias de cada entrega
 └── Dockerfile · docker-compose.yml · .env.example
 ```
@@ -77,7 +77,7 @@ Los errores tienen un formato único (`shared/errors.js`): 400 validación, 401 
 - **Devolución transaccional.** Registrar la devolución actualiza préstamo y reserva, crea incidencias, pone el recurso en mantenimiento (Inventario) y crea la sanción (Usuarios). Si Inventario o Usuarios no responden, **se revierte todo** y se responde 503; se puede reintentar sin dejar datos a medias.
 - **Notificaciones no bloquea.** Si el servicio de avisos cae, la reserva se crea igual (solo se registra una advertencia).
 - **Borrado lógico.** Un recurso con historial no se borra: `DELETE` lo marca como `baja`. Una reserva tampoco se borra: se cancela.
-- **Seguridad.** Contraseñas con bcrypt; JWT de 1 h (configurable con `JWT_EXPIRA_SEGUNDOS`); los servicios solo aceptan peticiones con el `X-Service-Token` interno, así que no se puede saltar el Gateway; el Gateway ignora cualquier `X-User-*` que mande el cliente; las rutas `/internal/v1` no se publican; el login no revela si falló el correo o la contraseña; los errores 500 no muestran detalles internos; límite de peticiones y cabeceras de `helmet`.
+- **Seguridad.** Contraseñas con bcrypt; JWT de 1 h (configurable con `JWT_EXPIRA_SEGUNDOS`); los servicios solo aceptan peticiones con el `X-Service-Token` interno, así que no se puede saltar el Gateway; el Gateway ignora cualquier `X-User-*` que mande el cliente; las rutas `/internal/v1` no se publican; el login no revela si falló el correo o la contraseña y una cuenta bloqueada no inicia sesión (403 `CUENTA_BLOQUEADA`); los errores 500 no muestran detalles internos; ids y páginas se validan contra el rango `INTEGER` (400, no 500); CORS con lista blanca (`CORS_ORIGINS`, vacía por defecto); en producción no se arranca con secretos de ejemplo; límite de peticiones y cabeceras de `helmet`. La revisión completa está en [`entregas/entrega-7/checklist-seguridad.md`](../entregas/entrega-7/checklist-seguridad.md), incluidas las limitaciones conocidas (por ejemplo, los JWT no se pueden revocar antes de expirar).
 - **Reglas de negocio parametrizables** por variables de entorno: tolerancia (15 min), días de sanción (3), cancelar hasta 1 h antes, etc. (`shared/config.js`).
 - **Tarea programada** (cada 60 s en el servicio de Reservas): cancela reservas no presentadas pasada la tolerancia, envía recordatorios 60 min antes y avisos cuando un préstamo se pasa de su hora.
 
@@ -97,7 +97,7 @@ Necesitan PostgreSQL y las bases creadas (`npm run db:crear`, o `docker compose 
 npm test
 ```
 
-57 pruebas: registro y login, autorización por rol, validaciones, CRUD, traslape, 8 reservas simultáneas del mismo horario (solo una gana), límite por rol, entrega/devolución, sanción automática, tarea programada, reportes y **tolerancia a fallos** (se apagan servicios a propósito). Cobertura medida: **92 %** (el RNF pide 60 %).
+146 pruebas: registro y login, autorización por rol, validaciones, CRUD, traslape, 8 reservas simultáneas del mismo horario (solo una gana), límite por rol, entrega/devolución, sanción automática, tarea programada, reportes, **tolerancia a fallos** (se apagan servicios a propósito) y, desde la Entrega 7, la suite de **seguridad** (`test/seguridad.test.js`: contraseñas con hash, secretos, 401 en cada operación protegida del contrato, tokens manipulados, 403 por rol, entradas hostiles, inyección SQL, CORS, cuentas bloqueadas y concurrencia). Cobertura medida: **99 % de líneas** (el RNF pide 60 %). Resultados en [`entregas/entrega-7/plan-de-pruebas.md`](../entregas/entrega-7/plan-de-pruebas.md).
 
 ### Contrato OpenAPI contra la API real
 
@@ -118,7 +118,15 @@ LIMITE_GENERAL_MIN=1000000 npm start     # en una terminal (en PowerShell: $env:
 npm run carga                            # en otra
 ```
 
-Resultado de referencia (50 usuarios, 15 s, laptop/VM de 2 núcleos): ~530 peticiones/s, **p95 ≈ 130 ms**, 0 errores.
+Resultado de referencia (50 usuarios, 20 s, VM de 2 núcleos): ~560 peticiones/s en `GET /recursos` (**p95 ≈ 130 ms**) y ~660 en `GET /reservas` (**p95 ≈ 97 ms**), 0 errores. Con `RUTA='/reservas?limit=20' npm run carga` se mide otro endpoint.
+
+### Prueba de humo después de desplegar
+
+```bash
+npm run humo        # 9 comprobaciones de solo lectura sobre el sistema corriendo
+```
+
+El procedimiento de despliegue, respaldo y reversión está en [`despliegue.md`](despliegue.md).
 
 ### Tolerancia a fallos
 
